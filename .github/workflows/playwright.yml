@@ -1,0 +1,35 @@
+name: 定时执行测试
+on:
+  schedule:
+    # 每天 UTC 时间 9:00 执行（北京时间 = UTC+8，即北京时间 17:00）
+    # 格式：分 时 日 月 周（参考 https://crontab.guru/ 生成表达式）
+    - cron: '0 9 * * *'
+    # 允许手动触发（在 GitHub 页面点击按钮执行）
+  # push:
+  #   branches: [ main, master ]
+  # pull_request:
+  #   branches: [ main, master ]
+jobs:
+  test:
+    timeout-minutes: 60
+    # 运行环境（可选：ubuntu-latest、windows-latest、macos-latest）
+    runs-on: ubuntu-latest
+    steps:
+    - name: 拉取 GitHub 代码
+      uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    - name: Run tests
+      run: npx playwright test --project=create-exam
+    - name: 上传测试报告
+      uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: 测试报告
+        path: playwright-report/,test-results/
+        retention-days: 30
