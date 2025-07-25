@@ -4,7 +4,8 @@ on:
     # 每天 UTC 时间 9:00 执行（北京时间 = UTC+8，即北京时间 17:00）
     # 格式：分 时 日 月 周（参考 https://crontab.guru/ 生成表达式）
     - cron: '0 9 * * *'
-    # 允许手动触发（在 GitHub 页面点击按钮执行）
+  # 允许手动触发（在 GitHub 页面点击按钮执行）
+  workflow_dispatch:
   # push:
   #   branches: [ main, master ]
   # pull_request:
