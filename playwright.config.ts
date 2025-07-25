@@ -40,11 +40,11 @@ export default defineConfig({
     },
     {
       name: 'setup',
-      testMatch: 'tests/login.spec.ts',
+      testMatch: 'tests/ijiaoyan/login.spec.ts',
     },
     {
       name: 'create-exam',
-      testMatch: 'tests/create_exam.spec.ts',
+      testMatch: 'tests/ijiaoyan/create_exam.spec.ts',
       dependencies: ['setup'],
     },
 

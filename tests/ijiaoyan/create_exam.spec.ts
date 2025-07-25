@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/loginf.fixture';
+import { test, expect } from '../../fixtures/loginf.fixture';
 
 test('创建试卷-添加题目-保存发布-生产完成', async ({ loggedInPage: page }) => {
   test.setTimeout(90000);
