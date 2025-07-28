@@ -12,7 +12,7 @@ test('创建试卷-添加题目-保存发布-生产完成', async ({ loggedInPag
   await page.waitForLoadState('networkidle');
   await page.getByText('生产中心').click();
   await page.getByText('测试专用公共云盘').click();
-  await page.getByText('zhangq测试生产中心').click();
+  await page.getByText('ui自动化测试文件夹').click();
   await page.getByRole('button', { name: '新建' }).click();
   await page.getByText('试卷', { exact: true }).click();
   await page.getByRole('textbox', { name: '* 名称:' }).click();
