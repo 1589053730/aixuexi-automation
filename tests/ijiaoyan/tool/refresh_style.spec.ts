@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test';
 
-
 test('一键替换新样式', async ({ page }) => {
-  test.setTimeout(90000);
+  test.setTimeout(600000);
   await page.goto('https://admin.aixuexi.com/#/login');
-  //生产环境账号密码
+  
+  // 生产环境账号密码
   await page.getByRole('textbox', { name: '请输入邮箱账号' }).fill('tester001@qq.com');
   await page.getByRole('textbox', { name: '请输入OA密码' }).fill('tk66666666');
-  await page.getByRole('link', { name: '登 录' }).click();
+  await page.getByRole('link', { name: '登 录' }).click();
   await page.waitForURL('https://admin.aixuexi.com/#/home');
 
   await page.goto('https://ijiaoyan.aixuexi.com/workbench.html#/');
@@ -16,123 +16,216 @@ test('一键替换新样式', async ({ page }) => {
   await page.getByText('生产中心').click();
   await page.getByText('测试专用公共云盘').click();
   await page.getByText('zhangq测试').click();
-  await page.getByText('寒假').click();
+  await page.getByText('106-能力提高').click();
+  
   // 开始遍历文件夹
-  await traverseFolders(page, '寒假');
-
-  // await page.waitForSelector('tbody.ant-table-tbody tr.ant-table-row', { timeout: 10000 });
-  // const handout_row = await page.$$('tbody.ant-table-tbody tr.ant-table-row'); 
+  await traverseFolders(page, '106-能力提高');
 });
 
 // 递归函数，用于遍历文件夹
-async function traverseFolders(page, folderSelector) {
-  // 点击进入当前文件夹
-  await page. getByText(folderSelector).click();
-  await page.waitForTimeout(3000);
-  // await page.waitForSelector('tr.ant-table-row.ant-table-row-level-0');
-  const tableRow = await page.$('tr.ant-table-row.ant-table-row-level-0');
-  // await page.waitForTimeout(5000);
-  // const tableRow = await page.$('tr.ant-table-row.ant-table-row-level-0', { timeout: 60000 });
-  if (tableRow) {
-    await page.waitForSelector('tbody.ant-table-tbody tr.ant-table-row', { timeout: 10000 });
+async function traverseFolders(page, folderName: string) {
+  console.log(`进入文件夹: ${folderName}`);
+  
+  await page.getByText(folderName).click();
+  await page.waitForTimeout(4000);
+  
+  await page.waitForFunction(
+    () => {
+      const tbody = document.querySelector('tbody.ant-table-tbody');
+      return !!tbody; // 只要tbody元素存在就返回true
+    },
+    {},
+    { timeout: 5000 }
+  );
 
-    // 获取当前文件夹下的所有行
-    const rows = await page.$$('tbody.ant-table-tbody tr.ant-table-row');
-
-    let hasSubFolders = false;
-
-    // 检查是否有子文件夹
-    for (const row of rows) {
-      const thirdColumn = await row.$('td:nth-child(3)');
-      if (!thirdColumn) continue;
-      const nameElement = await thirdColumn.$('div > span');
-      if (!nameElement) continue;
-      const title = await nameElement.getAttribute('title');
-      if (title === '文件夹') {
-        hasSubFolders = true;
-        // const folder = await nameElement.textContent();
-        const folder_span = await thirdColumn.$('div > div > div > span');
-        const folderName = await folder_span.textContent();
-        console.log('文件夹名称：', folderName);
-        // if (folder) {
-          // 递归调用遍历子文件夹
-        await traverseFolders(page, folderName);
-        // }
-      }
-    }
-
-    // 如果没有子文件夹，处理文件
-    if (!hasSubFolders) {
-
-      await page.waitForSelector('tbody.ant-table-tbody tr.ant-table-row', { timeout: 10000 });
-      await page.getByText('类型').first().click();
-      await page.waitForTimeout(1000);
-      await page.getByRole('menuitem', { name: '课程资料', exact: true }).click();
-      await page.waitForTimeout(1000);
-
-      const handout_row = await page.$$('tbody.ant-table-tbody tr.ant-table-row'); 
-      console.log('找到讲义文件数量：', handout_row.length);
-      if (handout_row.length > 0) {
-        for (const row of handout_row) {
-          const page1Promise = page.waitForEvent('popup');
-          const thirdColumn = await row.$('td:nth-child(3)'); 
-          if (!thirdColumn) continue;
-          //定位到讲义名称
-          const name = await thirdColumn.$('div > div > div > span');
-          if (!name) continue;
-          const handoutName = await name.textContent();
-          if (handoutName) {
-            console.log('开始操作讲义：', handoutName);
-          }
-          await name.click();
-
-          const page1 = await page1Promise;
-          const newPageUrl = page1.url();
-          console.log(`讲义名称：${handoutName}，原始新页面地址：`, newPageUrl);
-
-          const updatedUrl = `${page1.url()}&batchReplace=1`;
-          console.log(`讲义名称：${handoutName}，追加参数后的地址：`, updatedUrl);
-
-          // 导航到新地址（需要刷新两次）
-          await page1.goto(updatedUrl, { 
-            waitUntil: 'domcontentloaded'  // 只等DOM加载完成，不等图片/资源
-          });
-          await page1.reload({ waitUntil: 'domcontentloaded' });
-
-          await page1.locator('iframe').contentFrame().getByRole('button', { name: '刷样式' }).click();
-          await page1.locator('iframe').contentFrame().getByRole('button', { name: '确 认' }).click();
-
-          // 等待10秒
-          await page1.waitForTimeout(10000);
-          await page1.locator('iframe').contentFrame().getByRole('button', { name: '保 存' }).click();
-          console.log(`${handoutName}   已经完成刷新样式操作`);
-          // await page.bringToFront();
-          // 关闭当前弹出的页面
-          await page1.close();
-          await page.bringToFront();
-          await page.getByText('测试专用公共云盘').click();
-          await page.getByText('zhangq测试').click();
-          await page.getByText('寒假').click();
-        }
-
-      }else {
-        // console.warn('未找到 tbody 中的 tr 元素，此文件夹下面没有讲义');
-        console.log('未找到 tbody 中的 tr 元素，此文件夹下面没有讲义');
-        await page.getByText('测试专用公共云盘').click();
-        await page.getByText('zhangq测试').click();
-        await page.getByText('寒假').click();
-      }  
-  }
-
-  }else {
-    console.log('列表中没有数据，未找到 tr.ant-table-row 元素，此文件夹下无数据');
-    await page.getByText('测试专用公共云盘').click();
-    await page.getByText('zhangq测试').click();
-    await page.getByText('寒假').click();
-    // await page.getByText('寒假').click();
+  
+  // 获取所有行
+  const rows = await page.$$('tbody.ant-table-tbody tr.ant-table-row');
+  
+  if (rows.length === 0) {
+    console.log(`文件夹【 ${folderName} 】中没有讲义，返回上一级`);
+    await page.waitForTimeout(3000);
+    await goBackToParentFolder(page);
+    return;
   }
   
+  // 先收集所有子文件夹（用于后续排除）
+  const subFolders: string[] = [];
+  for (const row of rows) {
+    const thirdColumn = await row.$('td:nth-child(3)');
+    if (!thirdColumn) continue;
+    
+    const nameElement = await thirdColumn.$('div > span');
+    if (!nameElement) continue;
+    const title = await nameElement.getAttribute('title');
+    
+    if (title === '文件夹') {
+      const folderSpan = await thirdColumn.$('div > div > div > span');
+      const subFolderName = await folderSpan.textContent() ?? '';
+      if (subFolderName.trim() !== '') {
+        subFolders.push(subFolderName.trim());
+      }
+    }
+  }
+  
+  // 递归处理所有子文件夹
+  for (const subFolder of subFolders) {
+    await traverseFolders(page, subFolder);
+  }
+  
+  // 处理当前文件夹中的文件（排除已处理的子文件夹）
+  await processFilesInCurrentFolder(page, folderName, subFolders);
+  
+  console.log(`文件夹【 ${folderName} 】处理完成，返回上一级`);
+  await goBackToParentFolder(page);
+}
 
-  // 返回上一级文件夹
-  // await page.goBack();
+// 处理当前文件夹中的文件
+async function processFilesInCurrentFolder(page, folderName: string, subFolders: string[]) {
+  console.log(`开始处理文件夹【 ${folderName} 】中的文件`);
+  
+  // await page.waitForTimeout(4000);
+  // await page.getByText('类型').first().waitFor({
+  //   state: 'visible',
+  //   timeout: 15000 // 延长超时时间
+  // });
+
+  // await page.getByText('类型').first().click();await page.locator('.diy-dropdown-trigger > .anticon > svg').first().click();
+  // await page.waitForTimeout(1000);
+  // await page.getByRole('menuitem', { name: '课程资料', exact: true }).click();
+  await page.getByText('类型').first().waitFor({ state: 'visible', timeout: 15000 });
+  // await page.getByText('类型').first().click();
+  await page.locator('.diy-dropdown-trigger > .anticon > svg').first().click();
+
+  
+  // 等待筛选菜单出现
+  await page.getByRole('menuitem', { name: '课程资料', exact: true }).waitFor({ state: 'visible', timeout: 5000 });
+  await page.getByRole('menuitem', { name: '课程资料', exact: true }).click();
+  await page.waitForTimeout(1000);
+  
+  // 重新获取筛选后的行（避免缓存旧数据）
+  const fileRows = await page.$$('tbody.ant-table-tbody tr.ant-table-row');
+  const validFiles: string[] = [];
+  
+  // 遍历行，排除子文件夹，只保留真正的文件
+  for (const row of fileRows) {
+    const thirdColumn = await row.$('td:nth-child(3)');
+    if (!thirdColumn) continue;
+    
+    const nameElement = await thirdColumn.$('div > div > div > span');
+    if (!nameElement) continue;
+    
+    const fileName = await nameElement.textContent() ?? '';
+    const trimmedFileName = fileName.trim();
+    
+    // 核心判断：如果讲义名不在子文件夹列表中，才视为有效文件
+    if (trimmedFileName && !subFolders.includes(trimmedFileName)) {
+      validFiles.push(trimmedFileName);
+    }
+  }
+  
+  console.log(`文件夹【 ${folderName} 】中找到【 ${validFiles.length} 】个讲义文件`);
+  
+  if (validFiles.length === 0) {
+    console.log(`文件夹【 ${folderName} 】中没有讲义文件`);
+    return;
+  }
+  
+  // 处理每个讲义文件
+  for (const fileName of validFiles) {
+    console.log(`开始进入讲义：${fileName}`);
+
+    const pagePromise = page.waitForEvent('popup');
+    await page.getByText(fileName, { exact: true }).click();
+    const newPage = await pagePromise;
+    
+    // 刷新样式操作
+    const updatedUrl = `${newPage.url()}&batchReplace=1`; 
+    await newPage.goto(updatedUrl, { waitUntil: 'domcontentloaded' });
+    await newPage.reload({ waitUntil: 'domcontentloaded' });
+    
+    await newPage.locator('iframe').contentFrame().getByRole('button', { name: '刷样式' }).click();
+    await newPage.locator('iframe').contentFrame().getByRole('button', { name: '确 认' }).click();
+    
+    // 等待10s不动页面，操作完成并保存
+    await newPage.waitForTimeout(10000);
+    await newPage.locator('iframe').contentFrame().getByRole('button', { name: '保 存' }).click();
+    
+    console.log(`讲义”${fileName} “ 刷新样式操作完成`);
+    
+    await newPage.close();
+    await page.bringToFront();
+    // await page.waitForTimeout(1000);
+  }
+}
+
+// 返回上一级文件夹的通用方法
+async function goBackToParentFolder(page) {
+  // const breadcrumbLinks = await page.$$('.ant-breadcrumb .ant-breadcrumb-link');
+  const breadcrumbContainer = page.locator('.ant-breadcrumb');
+    await breadcrumbContainer.waitFor({
+      timeout: 15000,
+      state: 'visible'
+    });
+
+    // 2. 获取所有可用面包屑链接的定位器
+    const breadcrumbLinksLocator = breadcrumbContainer.locator(
+      '.ant-breadcrumb-link:not(.ant-breadcrumb-link-disabled)'
+    );
+
+    // 3. 检查链接数量
+    const linkCount = await breadcrumbLinksLocator.count();
+    if (linkCount < 2) {
+      console.warn('没有足够的面包屑层级，无法返回上一级');
+      return;
+    }
+
+    // 4. 获取父级目录的定位器
+    const parentLinkLocator = breadcrumbLinksLocator.nth(linkCount - 2);
+
+    // 5. 等待父级链接可见
+    await parentLinkLocator.waitFor({
+      timeout: 5000,
+      state: 'visible'
+    });
+
+    // 6. 执行点击并等待导航完成（修复waitUntil参数）
+    await Promise.all([
+      page.waitForNavigation({
+        timeout: 20000,
+        // 只使用单个值而不是数组，兼容所有版本
+        waitUntil: 'networkidle'
+      }),
+      parentLinkLocator.click({
+        timeout: 5000,
+        delay: 100,
+        button: 'left'
+      })
+    ]);
+
+
+   
+
+
+  // if (breadcrumbLinks.length >= 2) {
+  //   // await breadcrumbLinks[breadcrumbLinks.length - 2].click();
+  //   // await page.waitForTimeout(2000);
+
+  //   const parentLink = breadcrumbLinks[breadcrumbLinks.length - 2];
+  //   await parentLink.waitFor({ 
+  //       timeout: 10000,
+  //       state: 'visible' 
+  //     });
+  //   await parentLink.scrollIntoViewIfNeeded();
+  //     await parentLink.click({ 
+  //       timeout: 10000,
+  //       delay: 100 // 模拟人类点击延迟
+  //     });
+  //   await page.waitForNavigation({ 
+  //       timeout: 20000,
+  //       waitUntil: ['networkidle', 'domcontentloaded'] 
+  //     });
+  // } else {
+  //   console.warn('面包屑链接数量不足，无法返回上一级');
+  // }
 }
