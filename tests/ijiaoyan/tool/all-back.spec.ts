@@ -22,20 +22,11 @@ import * as path from 'path';
 
 // 定义已处理文件记录的存储路径
 const processedFileLog = path.resolve(__dirname, 'processed_files.json');
-// 定义失败文件记录路径
-const failedFileLog = path.resolve(__dirname, 'failed_files.json');
 
 // 初始化处理记录文件
 function initProcessedLog() {
   if (!fs.existsSync(processedFileLog)) {
     fs.writeFileSync(processedFileLog, JSON.stringify({}), 'utf-8');
-  }
-}
-
-// 初始化失败文件日志
-function initFailedLog() {
-  if (!fs.existsSync(failedFileLog)) {
-    fs.writeFileSync(failedFileLog, JSON.stringify({}), 'utf-8');
   }
 }
 
@@ -61,31 +52,6 @@ function markFileProcessed(fileType: string, fileName: string) {
   }
 }
 
-// 记录失败文件
-function markFileFailed(fileType: string, fileName: string, error: Error) {
-  try {
-    // 读取文件时，若文件为空或格式错误，使用默认空对象
-    let logContent = '{}'; // 默认值
-    if (fs.existsSync(failedFileLog)) {
-      logContent = fs.readFileSync(failedFileLog, 'utf-8').trim() || '{}';
-    }
-    const failedData = JSON.parse(logContent); // 此时解析的是有效 JSON
-
-    if (!failedData[fileType]) {
-      failedData[fileType] = [];
-    }
-
-    failedData[fileType].push({
-      fileName,
-      error: error.message,
-      time: new Date().toISOString()
-    });
-    fs.writeFileSync(failedFileLog, JSON.stringify(failedData, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('记录失败文件时出错:', err);
-  }
-}
-
 // 定义文件类型和对应处理函数的映射
 const fileTypeHandlers = {
   '课程资料': handleCourseMaterial,
@@ -99,7 +65,6 @@ test('一键替换新样式', async ({ page }) => {
   
   // 初始化处理记录
   initProcessedLog();
-  initFailedLog(); 
   
   test.setTimeout(600000);
   await page.goto('https://admin.aixuexi.com/#/login');
@@ -219,40 +184,10 @@ async function processFilesByType(page, folderName: string, subFolders: string[]
   }
   
   // 调用对应类型的处理函数
-//   for (const fileName of validFiles) {
-//     await handler(page, fileName);
-//   }
-
-  // 调用对应类型的处理函数（增加跳过逻辑）
   for (const fileName of validFiles) {
-    if (isFileProcessed(fileType, fileName)) {
-      console.log(`文件【 ${fileName} 】已处理，跳过`);
-      continue;
-    }
-    
-    let newPage; // 存储当前打开的页面引用
-    try {
-        newPage = await handler(page, fileName); // 处理函数返回新页面引用
-        markFileProcessed(fileType, fileName);
-    } catch (error) {
-        console.error(`处理文件【 ${fileName} 】失败:`, error);
-        if (newPage) {
-        await newPage.close().catch(err => console.error('关闭页面失败:', err)); // 关闭失败的文件页面
-        }
-        markFileFailed(fileType, fileName, error as Error); 
-    }
-    }
-
-    // try {
-    //   await handler(page, fileName);
-    //   // 处理成功后记录
-    //   markFileProcessed(fileType, fileName);
-    // } catch (error) {
-    //   console.error(`处理文件【 ${fileName} 】失败:`, error);
-    //   markFileFailed(fileType, fileName, error as Error); // 记录失败信息
-    // }
+    await handler(page, fileName);
   }
-// }
+}
 
 // 课程资料处理逻辑
 async function handleCourseMaterial(page, fileName: string) {
@@ -276,7 +211,6 @@ async function handleCourseMaterial(page, fileName: string) {
   
   await newPage.close();
   await page.bringToFront();
-  return newPage; // 返回页面引用
 }
 
 // 日积月累处理逻辑（更换模版、添加标题）
@@ -331,7 +265,6 @@ async function handleDailyAccumulation(page, fileName: string) {
   console.log(`日积月累“${fileName}“处理完成`);
   await newPagePeriodPromise.close();
   await page.bringToFront();
-  return newPagePeriodPromise;
 }
 
 //融汇贯通处理逻辑
@@ -404,7 +337,7 @@ async function handleIntegration(page, fileName: string) {
         await styleFrame.click();
         await integratePromise.locator('iframe').contentFrame().locator('div').filter({ hasText: /^订正栏\(25年\)添加$/ }).getByRole('button').click();
         await integratePromise.locator('iframe').contentFrame().locator('#root div').filter({ hasText: /^样式库$/ }).locator('svg').click();
-        //每添加一个都等3s，不然会出现连续都加在一个题下面
+        //每添加一个都等2s，不然会出现连续都加在一个题下面
         await integratePromise.waitForTimeout(3000);
     }
   
@@ -414,7 +347,6 @@ async function handleIntegration(page, fileName: string) {
   console.log(`融会贯通“${fileName}“处理完成`);
   await integratePromise.close();
   await page.bringToFront();
-  return integratePromise;
 }
 
 // 新增课件处理逻辑
@@ -439,7 +371,6 @@ async function handleCourseware(page, fileName: string) {
   
   await newPage.close();
   await page.bringToFront();
-  return newPage;
 }
 
 // 返回上一级文件夹方法保持不变

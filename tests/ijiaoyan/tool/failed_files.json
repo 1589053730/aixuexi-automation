@@ -1,0 +1,14 @@
+{
+  "日积月累": [
+    {
+      "fileName": "小数的初步认识（上）",
+      "error": "page.waitForEvent: Target page, context or browser has been closed\n=========================== logs ===========================\nwaiting for event \"popup\"\n============================================================",
+      "time": "2025-08-07T03:28:21.304Z"
+    },
+    {
+      "fileName": "小数的初步认识（上）",
+      "error": "locator.fill: Error: strict mode violation: locator('div.slb-lesson-name.flex > div > span.flex > div.text-input') resolved to 5 elements:\n    1) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4150629\"]').getByText('小学数学试卷')\n    2) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4196371\"]').getByText('小学数学试卷')\n    3) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4196036\"]').getByText('小学数学试卷')\n    4) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4196004\"]').getByText('小学数学试卷')\n    5) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4195965\"]').getByText('小学数学试卷')\n\nCall log:\n\u001b[2m  - waiting for locator('iframe').contentFrame().locator('div.slb-lesson-name.flex > div > span.flex > div.text-input')\u001b[22m\n",
+      "time": "2025-08-07T03:53:50.644Z"
+    }
+  ]
+}
