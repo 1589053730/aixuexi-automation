@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>自动化工具 - 创建资源</title>
+</head>
+<body>
+  <h2>创建资源工具</h2>
+  <label>资源类型：</label>
+  <select id="resourceType">
+    <option value="paper">试卷</option>
+    <option value="lecture">讲义</option>
+  </select>
+  <br><br>
+  
+  <label>包含题型：</label>
+  <input type="checkbox" id="choice" value="choice"> 选择题  
+  <input type="checkbox" id="fill" value="fill"> 填空题  
+  <input type="checkbox" id="answer" value="answer"> 解答题  
+  <br><br>
+  
+  <button onclick="submitForm()">提交创建</button>
+  
+  <script>
+    function submitForm() {
+      const resourceType = document.getElementById('resourceType').value;
+      const questionTypes = [];
+      if (document.getElementById('choice').checked) questionTypes.push('choice');
+      if (document.getElementById('fill').checked) questionTypes.push('fill');
+      if (document.getElementById('answer').checked) questionTypes.push('answer');
+      
+      // 调用后端服务（后面步骤写）
+      fetch('http://localhost:3000/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resourceType, questionTypes })
+      })
+      .then(res => res.json())
+      .then(data => alert(data.msg))
+      .catch(err => alert('请求失败：' + err));
+    }
+  </script>
+</body>
+</html>
