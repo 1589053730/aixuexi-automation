@@ -14,6 +14,9 @@
  * 3、替换标题名称为融汇贯通文件名称
  * 4、添加试卷信息，调整位置到标题下面
  * 5、每一道题后面添加订正栏
+ * 
+ * 在线课件
+ * 1、历史数据文件夹下所有在线课件全部选择 “小学数学 5、6年级”模版
  */
 
 import { test, expect } from '@playwright/test';
@@ -24,6 +27,14 @@ import * as path from 'path';
 const processedFileLog = path.resolve(__dirname, 'processed_files.json');
 // 定义失败文件记录路径
 const failedFileLog = path.resolve(__dirname, 'failed_files.json');
+
+// 初始化计数器 - 用于统计各类文件处理数量
+const counters = {
+  total: 0,
+  '课程资料': 0,
+  '日积月累': 0,
+  '融会贯通 ': 0
+};
 
 // 初始化处理记录文件
 function initProcessedLog() {
@@ -120,6 +131,14 @@ test('一键替换新样式', async ({ page }) => {
   
   // 开始遍历文件夹
   await traverseFolders(page, '106-能力提高');
+
+  // 所有文件处理完成后输出统计结果
+  console.log('\n===== 文件处理统计结果 =====');
+  console.log(`总处理文件数: ${counters.total}`);
+  console.log(`课程资料处理数: ${counters['课程资料']}`);
+  console.log(`日积月累处理数: ${counters['日积月累']}`);
+  console.log(`融会贯通处理数: ${counters['融会贯通 ']}`);
+  console.log('============================');
 });
 
 // 递归遍历文件夹逻辑保持不变
@@ -182,7 +201,7 @@ async function traverseFolders(page, folderName: string) {
 
 // 按文件类型处理文件的通用方法
 async function processFilesByType(page, folderName: string, subFolders: string[], fileType: string, handler: (page, fileName: string) => Promise<void>) {
-  console.log(`开始处理文件夹【 ${folderName} 】中的【 ${fileType} 】`);
+  console.log(`开始处理文件夹:  ${folderName}  中的【 ${fileType} 】`);
   
   // 切换文件类型筛选
   await page.getByText('类型').first().waitFor({ state: 'visible', timeout: 15000 });
@@ -211,17 +230,12 @@ async function processFilesByType(page, folderName: string, subFolders: string[]
     }
   }
   
-  console.log(`文件夹【 ${folderName} 】中找到【 ${validFiles.length} 】个${fileType}文件`);
+  console.log(`文件夹: ${folderName}  中找到【 ${validFiles.length} 】个 ${fileType} 文件`);
   
   if (validFiles.length === 0) {
-    console.log(`文件夹【 ${folderName} 】中没有${fileType}文件`);
+    console.log(`文件夹: ${folderName}   中没有  ${fileType} 文件`);
     return;
   }
-  
-  // 调用对应类型的处理函数
-//   for (const fileName of validFiles) {
-//     await handler(page, fileName);
-//   }
 
   // 调用对应类型的处理函数（增加跳过逻辑）
   for (const fileName of validFiles) {
@@ -234,29 +248,25 @@ async function processFilesByType(page, folderName: string, subFolders: string[]
     try {
         newPage = await handler(page, fileName); // 处理函数返回新页面引用
         markFileProcessed(fileType, fileName);
+
+        // 处理成功后计数器+1
+        counters[fileType]++;
+        counters.total++;
+        console.log(`当前累计处理 - 总: ${counters.total}, ${fileType}: ${counters[fileType]}`);
     } catch (error) {
         console.error(`处理文件【 ${fileName} 】失败:`, error);
         if (newPage) {
-        await newPage.close().catch(err => console.error('关闭页面失败:', err)); // 关闭失败的文件页面
+          await newPage.close().catch(err => console.error('关闭页面失败:', err)); // 关闭失败的文件页面
         }
         markFileFailed(fileType, fileName, error as Error); 
     }
     }
 
-    // try {
-    //   await handler(page, fileName);
-    //   // 处理成功后记录
-    //   markFileProcessed(fileType, fileName);
-    // } catch (error) {
-    //   console.error(`处理文件【 ${fileName} 】失败:`, error);
-    //   markFileFailed(fileType, fileName, error as Error); // 记录失败信息
-    // }
   }
-// }
 
 // 课程资料处理逻辑
 async function handleCourseMaterial(page, fileName: string) {
-  console.log(`开始处理课程资料：${fileName}`);
+  console.log(`开始处理课程资料： ${fileName}`);
 
   const pagePromise = page.waitForEvent('popup');
   await page.getByText(fileName, { exact: true }).click();
@@ -272,7 +282,7 @@ async function handleCourseMaterial(page, fileName: string) {
   await newPage.waitForTimeout(10000);
   await newPage.locator('iframe').contentFrame().getByRole('button', { name: '保 存' }).click();
   
-  console.log(`课程资料“${fileName}“处理完成`);
+  console.log(`课程资料“ ${fileName} “处理完成`);
   
   await newPage.close();
   await page.bringToFront();
@@ -281,7 +291,7 @@ async function handleCourseMaterial(page, fileName: string) {
 
 // 日积月累处理逻辑（更换模版、添加标题）
 async function handleDailyAccumulation(page, fileName: string) {
-  console.log(`开始处理日积月累：${fileName}`);
+  console.log(`开始处理日积月累： ${fileName} `);
 
   const pagePeriodPromise = page.waitForEvent('popup');
   await page.getByText(fileName, { exact: true }).click();
@@ -308,12 +318,6 @@ async function handleDailyAccumulation(page, fileName: string) {
   const titleStyle = newPagePeriodPromise.locator('iframe').contentFrame().locator('div.content-clip').nth(1);
   const parentTitleStyleDiv = titleStyle.locator('xpath=..');
   const titleId = await parentTitleStyleDiv.getAttribute('id'); 
-  console.log('讲次标题动态id:', titleId);
-
-  //此处注释的代码不要删除，另一种获取id的方法还没调完
-//   const titleStyle = newPagePeriodPromise.locator('iframe').contentFrame().locator('div.page-content > div.book-section.section-jcmc.page-break-avoid.section-xxsx-lesson-title > div');
-//   const titleId = await titleStyle.getAttribute('id');
-//   console.log('讲次标题动态id:', titleId);
 
   //3、替换讲次标题名称为文件名称
   const titleTextEle = newPagePeriodPromise.locator('iframe').contentFrame().locator('div.slb-lesson-name.flex > div > span.flex > div.text-input');
@@ -328,7 +332,7 @@ async function handleDailyAccumulation(page, fileName: string) {
   await newPagePeriodPromise.locator('iframe').contentFrame().getByRole('button', { name: '保 存' }).click();
   await newPagePeriodPromise.locator('iframe').contentFrame().getByRole('button', { name: '发 布' }).click();
   
-  console.log(`日积月累“${fileName}“处理完成`);
+  console.log(`日积月累“ ${fileName} “处理完成`);
   await newPagePeriodPromise.close();
   await page.bringToFront();
   return newPagePeriodPromise;
@@ -336,7 +340,7 @@ async function handleDailyAccumulation(page, fileName: string) {
 
 //融汇贯通处理逻辑
 async function handleIntegration(page, fileName: string) {
-  console.log(`开始处理融会贯通：${fileName}`);
+  console.log(`开始处理融会贯通： ${fileName}`);
 
   const pageIntegratePromise = page.waitForEvent('popup');
   await page.getByText(fileName, { exact: true }).click();
@@ -387,7 +391,6 @@ async function handleIntegration(page, fileName: string) {
   const titleClip = integratePromise.locator('iframe').contentFrame().locator('div.content-clip').nth(1);
   const titleParentDiv = titleClip.locator('xpath=..');
   const idTitle = await titleParentDiv.getAttribute('id'); 
-  console.log(`融会贯通的讲次标题id是：${idTitle}`);
 
   //点击讲次标题向上移动一次（讲次标题移动到最顶部）
   const titleDiv = await integratePromise.locator('iframe').contentFrame().locator('div.slb-lesson-name-con.flex');
@@ -411,7 +414,7 @@ async function handleIntegration(page, fileName: string) {
   await integratePromise.locator('iframe').contentFrame().getByRole('button', { name: '保 存' }).click();
   await integratePromise.locator('iframe').contentFrame().getByRole('button', { name: '发 布' }).click();
 
-  console.log(`融会贯通“${fileName}“处理完成`);
+  console.log(`融会贯通: “ ${fileName}“ 处理完成`);
   await integratePromise.close();
   await page.bringToFront();
   return integratePromise;
@@ -419,7 +422,7 @@ async function handleIntegration(page, fileName: string) {
 
 // 新增课件处理逻辑
 async function handleCourseware(page, fileName: string) {
-  console.log(`开始处理课件：${fileName}`);
+  console.log(`开始处理课件： ${fileName}`);
 
   const pagePromise = page.waitForEvent('popup');
   await page.getByText(fileName, { exact: true }).click();

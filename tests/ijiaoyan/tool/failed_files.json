@@ -10,5 +10,58 @@
       "error": "locator.fill: Error: strict mode violation: locator('div.slb-lesson-name.flex > div > span.flex > div.text-input') resolved to 5 elements:\n    1) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4150629\"]').getByText('小学数学试卷')\n    2) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4196371\"]').getByText('小学数学试卷')\n    3) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4196036\"]').getByText('小学数学试卷')\n    4) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4196004\"]').getByText('小学数学试卷')\n    5) <div class=\"text-input\" contenteditable=\"true\">小学数学试卷</div> aka locator('[id=\"4195965\"]').getByText('小学数学试卷')\n\nCall log:\n\u001b[2m  - waiting for locator('iframe').contentFrame().locator('div.slb-lesson-name.flex > div > span.flex > div.text-input')\u001b[22m\n",
       "time": "2025-08-07T03:53:50.644Z"
     }
+  ],
+  "课件": [
+    {
+      "fileName": "脑筋转转转",
+      "error": "locator.click: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('div').filter({ hasText: /^小学数学小学数学5，6年级$/ }).getByRole('img')\u001b[22m\n",
+      "time": "2025-08-07T08:20:36.199Z"
+    },
+    {
+      "fileName": "图形列车",
+      "error": "page.waitForTimeout: Test timeout of 600000ms exceeded.",
+      "time": "2025-08-07T08:32:50.755Z"
+    },
+    {
+      "folderPath": "1127785043-期末复习",
+      "fullPath": "1127785043-期末复习",
+      "error": "page.waitForEvent: Target page, context or browser has been closed\n=========================== logs ===========================\nwaiting for event \"popup\"\n============================================================",
+      "time": "2025-08-07T09:55:06.328Z"
+    },
+    {
+      "folderPath": "1127785002-火眼金睛养成记",
+      "fullPath": "1127785002-火眼金睛养成记",
+      "error": "page.waitForEvent: Target page, context or browser has been closed\n=========================== logs ===========================\nwaiting for event \"popup\"\n============================================================",
+      "time": "2025-08-07T10:05:20.507Z"
+    },
+    {
+      "folderPath": "1127785001-专注力大比拼",
+      "fileName": "专注力大比拼",
+      "fullPath": "1127785001-专注力大比拼||专注力大比拼",
+      "error": "主页面已关闭，无法继续处理",
+      "time": "2025-08-07T10:44:06.363Z"
+    },
+    {
+      "folderPath": "1127784995-数数小能手",
+      "fileName": "数数小能手",
+      "fullPath": "1127784995-数数小能手||数数小能手",
+      "error": "主页面已关闭，无法继续处理",
+      "time": "2025-08-07T10:55:34.317Z"
+    },
+    {
+      "folderPath": "1127785101-下一个是谁",
+      "fileName": "下一个是谁",
+      "fullPath": "1127785101-下一个是谁||下一个是谁",
+      "error": "locator.click: Error: strict mode violation: getByText('下一个是谁', { exact: true }) resolved to 7 elements:\n    1) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '视频 下一个是谁 创建:测试账号001/更新于:测试账号001 2025-07-21 18:13:' }).locator('span').nth(1)\n    2) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '视频 下一个是谁 创建:测试账号001/更新于:测试账号001 2025-07-07 13:39:15', exact: true }).locator('span').nth(1)\n    3) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '专题课视频 下一个是谁 创建:测试账号001' }).locator('span').nth(1)\n    4) <span class=\"title\">下一个是谁</span> aka locator('tr:nth-child(4) > .file-name > div > div > .name-data > .title')\n    5) <span class=\"title\">下一个是谁</span> aka locator('tr:nth-child(5) > .file-name > div > div > .name-data > .title')\n    6) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '讲义 下一个是谁 创建:测试账号001/更新于:测试账号' }).locator('span').nth(1)\n    7) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '在线课件 下一个是谁 在线课件 创建:测试账号001' }).locator('span').nth(1)\n\nCall log:\n\u001b[2m  - waiting for getByText('下一个是谁', { exact: true })\u001b[22m\n",
+      "time": "2025-08-08T04:17:40.426Z"
+    }
+  ],
+  "系统操作": [
+    {
+      "folderPath": "返回上一级文件夹",
+      "fullPath": "返回上一级文件夹",
+      "error": "点击返回失败: page.waitForNavigation: Timeout 20000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"networkidle\"\n  navigated to \"https://ijiaoyan.aixuexi.com/production-center.html#/list/431/687085\"\n============================================================",
+      "time": "2025-08-08T04:14:26.089Z"
+    }
   ]
 }
