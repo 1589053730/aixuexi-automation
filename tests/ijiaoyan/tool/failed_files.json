@@ -54,6 +54,13 @@
       "fullPath": "1127785101-下一个是谁||下一个是谁",
       "error": "locator.click: Error: strict mode violation: getByText('下一个是谁', { exact: true }) resolved to 7 elements:\n    1) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '视频 下一个是谁 创建:测试账号001/更新于:测试账号001 2025-07-21 18:13:' }).locator('span').nth(1)\n    2) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '视频 下一个是谁 创建:测试账号001/更新于:测试账号001 2025-07-07 13:39:15', exact: true }).locator('span').nth(1)\n    3) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '专题课视频 下一个是谁 创建:测试账号001' }).locator('span').nth(1)\n    4) <span class=\"title\">下一个是谁</span> aka locator('tr:nth-child(4) > .file-name > div > div > .name-data > .title')\n    5) <span class=\"title\">下一个是谁</span> aka locator('tr:nth-child(5) > .file-name > div > div > .name-data > .title')\n    6) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '讲义 下一个是谁 创建:测试账号001/更新于:测试账号' }).locator('span').nth(1)\n    7) <span class=\"title\">下一个是谁</span> aka getByRole('cell', { name: '在线课件 下一个是谁 在线课件 创建:测试账号001' }).locator('span').nth(1)\n\nCall log:\n\u001b[2m  - waiting for getByText('下一个是谁', { exact: true })\u001b[22m\n",
       "time": "2025-08-08T04:17:40.426Z"
+    },
+    {
+      "folderPath": "1127784318-日积月累",
+      "fileName": "日积月累",
+      "fullPath": "1127784318-日积月累||日积月累",
+      "error": "locator.click: Error: strict mode violation: getByText('日积月累', { exact: true }) resolved to 2 elements:\n    1) <span class=\"title\">日积月累</span> aka locator('#root').getByText('日积月累', { exact: true })\n    2) <li role=\"menuitem\" class=\"ant-dropdown-menu-item\">日积月累</li> aka locator('li').filter({ hasText: /^日积月累$/ })\n\nCall log:\n\u001b[2m  - waiting for getByText('日积月累', { exact: true })\u001b[22m\n",
+      "time": "2025-08-13T15:27:02.630Z"
     }
   ],
   "系统操作": [

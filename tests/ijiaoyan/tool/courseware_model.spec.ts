@@ -24,25 +24,6 @@ const counters = {
   'grandTotal课件': 0        // 总处理课件数(本次+历史)
 };
 
-//初始化进度记录文件
-// function initProgressLog() {
-//   if (!fs.existsSync(progressLog)) {
-//     fs.writeFileSync(progressLog, JSON.stringify({ lastProcessedFolder: null }), 'utf-8');
-//   }
-// }
-
-//更新进度记录
-// function updateProgress(folderName: string | null) {
-//   fs.writeFileSync(progressLog, JSON.stringify({ lastProcessedFolder: folderName }, null, 2), 'utf-8');
-// }
-
-//获取最后处理的文件夹
-// function getLastProcessedFolder(): string | null {
-//   const logContent = fs.readFileSync(progressLog, 'utf-8');
-//   const progressData = JSON.parse(logContent);
-//   return progressData.lastProcessedFolder as string | null;
-// }
-
 // 初始化处理记录文件
 function initProcessedLog() {
   if (!fs.existsSync(processedFileLog)) {
@@ -130,35 +111,12 @@ function getHistoricalCounts() {
   return counts;
 }
 
-// 定义文件类型和对应处理函数的映射
-// const fileTypeHandlers = {
-//   '课件': handleCourseware 
-// };
-
 const fileTypeHandlers: {
   '课件': (page: any, fileName: string, fullPath: string) => Promise<void>
 } = {
   '课件': handleCourseware 
 };
 
-// 在代码顶部添加需要处理的目标文件夹数组
-// const TARGET_FOLDER_PATHS = [
-//   ['历史数据', '106-能力提高', '9013-2021小学数学能力提高体系苏教版','4-三年级','暑假'],  
-//   ['历史数据', '106-能力提高', '9013-2021小学数学能力提高体系苏教版','5-四年级'], 
-//   ['历史数据', '106-能力提高', '9013-2021小学数学能力提高体系苏教版','6-五年级'], 
-//   ['历史数据', '106-能力提高', '9013-2021小学数学能力提高体系苏教版','7-六年级']
-// ];
-
-// 获取当前文件夹的完整路径（层级数组）
-// async function getCurrentFolderPath(page) {
-//   // 从面包屑中提取路径（假设面包屑格式为 "文件夹1 / 文件夹A / L"）
-//   const breadcrumbText = await page.locator('.ant-breadcrumb').textContent() || '';
-//   // 去除空格并按分隔符拆分（根据实际面包屑分隔符调整，如“/”“>”等）
-//   return breadcrumbText
-//     .replace(/\s+/g, '')       // 去除所有空格
-//     .split('/')                // 按面包屑分隔符拆分（例如“/”）
-//     .filter(path => path);     // 过滤空值
-// }
 
 test('在线课件添加小数模版', async ({ page }) => {
   
@@ -182,14 +140,17 @@ test('在线课件添加小数模版', async ({ page }) => {
   await page.getByText('生产中心').click();
   await page.locator('div.ant-layout-sider-children > ul > li > div').getByText('TSM公共云盘').click();
   await page.getByText('历史数据').click();
-  await page.getByText('106-能力提高').click();
-  // await page.getByText('9012-2021小学数学能力提高体系北师版').click();
+  // await page.getByText('139-能力强化').click();
+  await page.getByText('139-能力强化').click();
+  // await page.getByText('48-思维突破').click();
+  // await page.getByText('106-能力提高').click();
+  await page.getByText('9010-2021小学数学能力强化体系苏教版').click();
 //   await page.getByText('7-六年级').click();
 //   await page.getByText('暑假').click();
 //   await page.getByText('春季').click();
   
   // 开始遍历文件夹
-  await traverseFolders(page, '9011-2021小学数学能力提高体系人教版');
+  await traverseFolders(page, '7-六年级');
 
   // 所有文件处理完成后输出统计结果
   console.log('\n===== 文件处理统计结果 =====');
@@ -209,25 +170,6 @@ test('在线课件添加小数模版', async ({ page }) => {
 
 // 递归遍历文件夹
 async function traverseFolders(page, folderName: string) {
-//   const currentPath = await getCurrentFolderPath(page);
-//   console.log(`当前路径：${currentPath.join('→')}`);
-
-//   // 检查当前路径是否为目标路径或目标路径的祖先路径
-//   const isTargetOrAncestor = TARGET_FOLDER_PATHS.some(targetPath => {
-//     // 检查当前路径是否是目标路径的前缀
-//     return currentPath.every((level, index) => {
-//       return index < targetPath.length && level === targetPath[index];
-//     });
-//   });
-
-//   // 如果不是目标路径或其祖先路径，直接返回
-//   if (!isTargetOrAncestor) {
-//     console.log(`文件夹【${folderName}】不在目标路径或其祖先路径中，跳过`);
-//     return;
-//   }
-
-//   // 如果是目标文件夹，执行处理逻辑（以下代码不变）
-//   console.log(`进入目标文件夹: ${folderName}（路径：${currentPath.join('→')}）`);
 
   //以下代码是循环遍历所有文件夹，（修改按照数组遍历以前的代码，区别只是添加了以上代码按照数组遍历）
   console.log(`进入文件夹: ${folderName}`);
@@ -288,17 +230,6 @@ async function traverseFolders(page, folderName: string) {
 
   await goBackToParentFolder(page);
 }
-
-//判断文件夹是否为目标文件夹的祖先文件夹
-// async function isAncestorFolder(page, targetFolder: string, currentFolder: string): Promise<boolean> {
-//   // 获取当前面包屑路径
-//   const breadcrumbContainer = page.locator('.ant-breadcrumb');
-//   const breadcrumbText = await breadcrumbContainer.textContent() || '';
-  
-//   // 检查当前文件夹是否在目标文件夹的文件夹是否在目标文件夹的路径中
-//   return breadcrumbText.includes(currentFolder) && breadcrumbText.includes(targetFolder) && 
-//          breadcrumbText.indexOf(currentFolder) < breadcrumbText.indexOf(targetFolder);
-// }
 
 // 按文件类型处理文件的通用方法
 async function processFilesByType(page, folderPath: string, subFolders: string[], fileType: string, handler: (page: any, fileName: string, fullPath: string) => Promise<void>) {
@@ -465,15 +396,6 @@ async function handleCourseware(page, fileName: string, fullPath: string) {
     throw error;
   }
   
-//   const pagePromise = page.waitForEvent('popup');
-//   const modelPage = await pagePromise;
-  
-//   await modelPage.waitForTimeout(3000);
-
-//   console.log(`在线课件： 【 ${fileName} “】 处理完成`);
-//   await modelPage.close();
-//   await page.bringToFront();
-//   return modelPage;
 }
 
 // 返回上一级文件夹方法保持不变
