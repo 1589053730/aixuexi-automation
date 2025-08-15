@@ -11,8 +11,6 @@ import * as path from 'path';
 const processedFileLog = path.resolve(__dirname, 'processed_files.json');
 // 定义失败文件记录路径
 const failedFileLog = path.resolve(__dirname, 'failed_files.json');
-// // 记录进度的文件路径
-// const progressLog = path.resolve(__dirname, 'progress.json');
 
 // 初始化计数器 - 用于统计各类文件处理数量
 const counters = {
@@ -154,24 +152,19 @@ test('在线课件添加小数模版', async ({ page }) => {
 
   // 所有文件处理完成后输出统计结果
   console.log('\n===== 文件处理统计结果 =====');
-//   console.log(`本次处理文件数: ${counters.total}`);
   console.log(`本次处理课件数: ${counters['课件']}`);
   console.log('-----------------------------');
   console.log(`跳过的已处理文件数: ${counters.skippedTotal}`);
   console.log(`跳过的已处理课件数: ${counters['skipped课件']}`);
   console.log('-----------------------------');
-//   console.log(`总处理文件数(本次+历史): ${counters.grandTotal}`);
-//   console.log(`总处理课件数(本次+历史): ${counters.grandTotal课件}`);
   console.log('=============================');
 
-  // 全部完成后清空进度记录
-//   updateProgress(null);
 });
 
 // 递归遍历文件夹
 async function traverseFolders(page, folderName: string) {
 
-  //以下代码是循环遍历所有文件夹，（修改按照数组遍历以前的代码，区别只是添加了以上代码按照数组遍历）
+  //以下代码是循环遍历所有文件夹
   console.log(`进入文件夹: ${folderName}`);
   await page.getByText(folderName, { exact: true }).click();
   await page.waitForTimeout(4000);
@@ -225,9 +218,6 @@ async function traverseFolders(page, folderName: string) {
   console.log(`文件夹【 ${folderName} 】处理完成，返回上一级`);
   console.log("*****************************************************");
 
-  // 新增：更新进度记录为当前文件夹
-//   updateProgress(folderName);
-
   await goBackToParentFolder(page);
 }
 
@@ -269,7 +259,7 @@ async function processFilesByType(page, folderPath: string, subFolders: string[]
     return;
   }
 
-  // 调用对应类型的处理函数（使用完整路径判断）
+  // 调用对应类型的处理函数
   for (const fileName of validFiles) {
 
     const fullPath = `${folderPath}||${fileName}`;
@@ -322,9 +312,7 @@ async function handleCourseware(page, fileName: string, fullPath: string) {
   try {
     await page.getByText(fileName, { exact: true }).click();
     await page.waitForTimeout(4000);
-    
-    //   await page.locator('div').filter({ hasText: /^小学数学小学数学5，6年级$/ }).getByRole('img').click();
-    
+        
     // 检查目标元素是否存在
     const targetElement = page.locator('div').filter({ hasText: /^小学数学小学数学5，6年级$/ }).getByRole('img');
     const elementExists = await targetElement.isVisible({ timeout: 10000 }).catch(() => false);
