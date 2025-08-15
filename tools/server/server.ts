@@ -3,29 +3,50 @@ import { exec } from 'child_process';
 const app = express();
 app.use(express.json());
 
-// 接收前端参数，调用 Playwright 测试脚本
-app.post('/start', (req, res) => {
-  const { resourceType, questionTypes } = req.body;
-  
-  // 拼接 Playwright 命令（假设写了一个工具用例 create-tool.spec.ts）
-  // 例如：npx playwright test tests/ijiaoyan/tool/create-tool.spec.ts -- --type=paper --questions=choice,fill
-  const cmd = [
-    'npx playwright test',
-    'tests/ijiaoyan/tool/create-tool.spec.ts', // 新增的工具用例
-    `-- --type=${resourceType} --questions=${questionTypes.join(',')}`
-  ].join(' ');
+// 允许跨域（根据实际需求调整）
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
 
-  // 执行命令（调用自动化）
-  exec(cmd, (error, stdout, stderr) => {
+app.post('/run-test', (req, res) => {
+  const { resourceType, questionTypes } = req.body;
+  let testScript = '';
+
+  // 根据资源类型选择要执行的 Playwright 测试脚本
+  if (resourceType === 'exam') {
+    testScript = 'create_exam.spec.ts';
+  } else if (resourceType === 'course') {
+    testScript = 'create_course.spec.ts';
+  } else {
+    return res.status(400).json({ message: '无效的资源类型' });
+  }
+
+  // 拼接 Playwright 执行命令（需确保 playwright 已全局/项目安装）
+  // 示例：npx playwright test tests/ijiaoyan/create_exam.spec.ts --headed --project=chromium questionTypes=choice questionTypes=choice
+  const cmd = [
+    'npx', 'playwright', 'test', 
+    `tests/ijiaoyan/${testScript}`,
+    '--headed',  // 启用浏览器可视化模式
+    '--project=chromium', // 根据实际配置选择浏览器
+    `questionTypes=${questionTypes.join(',')}`
+  ];
+
+  const fullCmd = cmd.join(' ') + ' ' + `questionTypes=${questionTypes.join(',')}`;
+  console.log('即将执行的命令:', fullCmd);
+
+  exec(fullCmd, (error, stdout, stderr) => {
     if (error) {
-      res.json({ success: false, msg: `执行失败：${error.message}` });
-      return;
+      console.error('执行错误:', error);
+      return res.json({ message: `执行失败：\n${stderr || error.message}` });
     }
-    res.json({ success: true, msg: `执行完成：\n${stdout}` });
+    res.json({ message: `执行成功！\n${stdout}` });
   });
 });
 
-app.listen(3000, () => {
-  console.log('工具服务启动：http://localhost:3000');
-  console.log('前端页面访问：http://localhost:3000/tools/ui/index.html');
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`服务已启动：http://localhost:${PORT}`);
 });

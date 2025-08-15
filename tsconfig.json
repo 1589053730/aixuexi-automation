@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",       // 关键：指定编译为 CommonJS 模块
+    "target": "ES2018",         // 兼容 Node.js 的 ES 版本
+    "moduleResolution": "Node", // 按 Node 规则解析模块
+    "esModuleInterop": true,    // 允许 ES 模块与 CommonJS 互操作
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}

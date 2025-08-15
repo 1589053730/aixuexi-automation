@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>创建资源</title>
+  <style>
+    body { padding: 20px; }
+    .form-group { margin: 10px 0; }
+    button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>创建资源选择</h2>
+  <div class="form-group">
+    <label for="resourceType">资源类型：</label>
+    <select id="resourceType">
+      <option value="exam">试卷</option>
+      <option value="course">讲义</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>题型选择：</label>
+    <label><input type="checkbox" name="questionType" value="choice"> 选择题</label>
+    <label><input type="checkbox" name="questionType" value="fill"> 填空题</label>
+    <label><input type="checkbox" name="questionType" value="judge"> 判断题</label>
+  </div>
+  <button onclick="submitForm()">提交创建</button>
+  <div id="result" style="margin-top: 20px;"></div>
+
+  <script>
+    async function submitForm() {
+      const resourceType = document.getElementById('resourceType').value;
+      const questionTypes = Array.from(
+        document.querySelectorAll('input[name="questionType"]:checked')
+      ).map(el => el.value);
+
+      if (questionTypes.length === 0) {
+        alert('请至少选择一种题型！');
+        return;
+      }
+
+      document.getElementById('result').innerText = '正在执行...';
+
+      try {
+        // 调用 Node 服务端接口，传递选择的参数
+        const res = await fetch('http://localhost:3000/run-test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resourceType, questionTypes })
+        });
+        const data = await res.json();
+        document.getElementById('result').innerText = data.message;
+      } catch (err) {
+        document.getElementById('result').innerText = '执行失败：' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
