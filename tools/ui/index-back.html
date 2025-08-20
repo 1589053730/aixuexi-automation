@@ -3,29 +3,194 @@
 <head>
   <meta charset="UTF-8">
   <title>创建资源</title>
-  <style>
-    body { padding: 20px; }
-    .form-group { margin: 10px 0; }
-    button { margin-top: 10px; }
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind自定义主题 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            neutral: '#F5F7FA',
+            dark: '#1D2129',
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .form-focus {
+        @apply focus:ring-2 focus:ring-primary/30 focus:border-primary focus:outline-none;
+      }
+      .card-shadow {
+        @apply shadow-lg shadow-primary/10;
+      }
+      .btn-hover {
+        @apply hover:shadow-md hover:shadow-primary/20 hover:-translate-y-0.5 transition-all duration-200;
+      }
+    }
   </style>
 </head>
-<body>
-  <h2>创建资源选择</h2>
-  <div class="form-group">
-    <label for="resourceType">资源类型：</label>
-    <select id="resourceType">
-      <option value="exam">试卷</option>
-      <option value="course">讲义</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label>题型选择：</label>
-    <label><input type="checkbox" name="questionType" value="choice"> 选择题</label>
-    <label><input type="checkbox" name="questionType" value="fill"> 填空题</label>
-    <label><input type="checkbox" name="questionType" value="judge"> 判断题</label>
-  </div>
-  <button onclick="submitForm()">提交创建</button>
-  <div id="result" style="margin-top: 20px;"></div>
+<body class="bg-gray-50 font-inter text-dark min-h-screen flex flex-col">
+  <!-- 顶部导航 -->
+  <header class="bg-white shadow-sm py-4 px-6 border-b border-gray-100">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-cubes text-primary text-2xl"></i>
+        <h1 class="text-xl font-semibold text-dark">资源创建中心</h1>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button class="text-gray-500 hover:text-primary transition-colors">
+          <i class="fa fa-question-circle"></i>
+          <span class="ml-1 hidden sm:inline">帮助</span>
+        </button>
+        <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <i class="fa fa-user"></i>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="flex-grow container mx-auto px-4 py-8 md:py-12">
+    <div class="max-w-2xl mx-auto">
+      <!-- 页面标题 -->
+      <div class="mb-8 text-center">
+        <h2 class="text-[clamp(1.5rem,3vw,2.25rem)] font-bold text-dark mb-2">创建课程资源</h2>
+        <p class="text-gray-500">选择资源类型和题型，快速生成定制化生产数据</p>
+      </div>
+      
+      <!-- 表单卡片 -->
+      <div class="bg-white rounded-xl p-6 md:p-8 card-shadow transition-all duration-300 hover:shadow-xl">
+        <form id="resourceForm" class="space-y-6">
+          <!-- 新建课程 -->
+          <div class="form-group">
+            <label for="courseName" class="block text-sm font-medium text-gray-700 mb-2">
+              新建课程 <span class="text-red-500">*</span>
+            </label>
+            <div class="relative mb-3">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <i class="fa fa-book"></i>
+              </div>
+              <input type="text" id="courseName" placeholder="请输入课程名称"
+                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-neutral form-focus transition-colors">
+            </div>
+            <div class="text-sm text-gray-500 mb-2">可按照以下条件创建课程：</div>
+            <div class="space-y-2">
+              <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
+                <input type="radio" name="presetCourse" value="A" 
+                  class="w-5 h-5 text-primary form-focus">
+                <span class="ml-3 text-gray-700">人教版-思维创新-初一-暑假-2025-2讲-三阶课</span>
+              </label>
+              
+              <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
+                <input type="radio" name="presetCourse" value="B" 
+                  class="w-5 h-5 text-primary form-focus">
+                <span class="ml-3 text-gray-700">人教版-思维突破-初一-暑假-2025-2讲-三阶课</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 资源类型选择 -->
+          <div class="form-group">
+            <label for="resourceType" class="block text-sm font-medium text-gray-700 mb-2">
+              资源类型 <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <i class="fa fa-file-text-o"></i>
+              </div>
+              <select id="resourceType" 
+                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-neutral form-focus transition-colors">
+                <option value="exam">试卷</option>
+                <option value="course">讲义</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- 题型选择 -->
+          <div class="form-group">
+            <label class="block text-sm font-medium text-gray-700 mb-3">
+              题型选择 <span class="text-red-500">*</span>
+            </label>
+            <div class="space-y-3">
+              <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
+                <input type="checkbox" name="questionType" value="choice" 
+                  class="w-5 h-5 text-primary form-focus rounded">
+                <span class="ml-3 text-gray-700">选择题</span>
+                <span class="ml-auto text-xs text-gray-400"><i class="fa fa-check-circle-o"></i> 单选/多选题</span>
+              </label>
+              
+              <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
+                <input type="checkbox" name="questionType" value="fill" 
+                  class="w-5 h-5 text-primary form-focus rounded">
+                <span class="ml-3 text-gray-700">填空题</span>
+                <span class="ml-auto text-xs text-gray-400"><i class="fa fa-pencil"></i> 文本填空</span>
+              </label>
+              
+              <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
+                <input type="checkbox" name="questionType" value="judge" 
+                  class="w-5 h-5 text-primary form-focus rounded">
+                <span class="ml-3 text-gray-700">判断题</span>
+                <span class="ml-auto text-xs text-gray-400"><i class="fa fa-check fa-times"></i> 对错判断</span>
+              </label>
+
+              <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
+                <input type="checkbox" name="questionType" value="answer" 
+                  class="w-5 h-5 text-primary form-focus rounded">
+                <span class="ml-3 text-gray-700">解答题</span>
+                <span class="ml-auto text-xs text-gray-400"><i class="fa fa-pencil-square-o"></i> 详细回答</span>
+              </label>
+
+              <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
+                <input type="checkbox" name="questionType" value="comprehensive" 
+                  class="w-5 h-5 text-primary form-focus rounded">
+                <span class="ml-3 text-gray-700">综合题</span>
+                <span class="ml-auto text-xs text-gray-400"><i class="fa fa-sitemap"></i> 综合应用</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- 提交按钮 -->
+          <button type="button" onclick="submitForm()" 
+            class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 btn-hover">
+            <i class="fa fa-rocket"></i>
+            <span>提交创建</span>
+          </button>
+        </form>
+        
+        <!-- 结果显示区 -->
+        <div id="result" class="mt-6 p-4 rounded-lg hidden transition-all duration-300"></div>
+      </div>
+      
+      <!-- 信息提示卡片 -->
+      <div class="mt-6 bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-start">
+        <i class="fa fa-info-circle text-primary mt-0.5 mr-3"></i>
+        <div class="text-sm text-gray-600">
+          <p>系统将根据您的选择自动生成符合要求的课程资源，生成过程可能需要几秒钟时间。</p>
+          <p class="mt-1">所有生成的资源将保存在生产中心和课程库的ui自动化文件夹，可随时查看和编辑。</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-white border-t border-gray-100 py-6 px-4">
+    <div class="container mx-auto text-center text-sm text-gray-500">
+      <p>课程资源创建系统 - 安全可靠的课程资源生成平台</p>
+    </div>
+  </footer>
 
   <script>
     async function submitForm() {
@@ -33,27 +198,78 @@
       const questionTypes = Array.from(
         document.querySelectorAll('input[name="questionType"]:checked')
       ).map(el => el.value);
+      // 获取课程名称
+      const courseName = document.getElementById('courseName').value;
+      // 获取选中的预设课程
+      const presetCourse = document.querySelector('input[name="presetCourse"]:checked')?.value;
+      const resultEl = document.getElementById('result');
 
+      // 验证选择
       if (questionTypes.length === 0) {
-        alert('请至少选择一种题型！');
+        showResult('请至少选择一种题型！', 'error');
         return;
       }
 
-      document.getElementById('result').innerText = '正在执行...';
+      // 显示加载状态
+      showResult('<i class="fa fa-circle-o-notch fa-spin mr-2"></i> 正在生成资源，请稍候...', 'loading');
 
       try {
-        // 调用 Node 服务端接口，传递选择的参数
+        // 调用接口
         const res = await fetch('http://localhost:3000/run-test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resourceType, questionTypes })
+          body: JSON.stringify({ 
+            resourceType, 
+            questionTypes,
+            courseName,
+            presetCourse
+          })
         });
+        
         const data = await res.json();
-        document.getElementById('result').innerText = data.message;
+        
+        if (res.ok) {
+          showResult(`<i class="fa fa-check-circle mr-2"></i> ${data.message}`, 'success');
+        } else {
+          showResult(`<i class="fa fa-exclamation-circle mr-2"></i> ${data.message || '生成失败'}`, 'error');
+        }
       } catch (err) {
-        document.getElementById('result').innerText = '执行失败：' + err.message;
+        showResult(`<i class="fa fa-exclamation-circle mr-2"></i> 执行失败：${err.message}`, 'error');
       }
     }
+
+    // 显示结果提示
+    function showResult(message, type) {
+      const resultEl = document.getElementById('result');
+      resultEl.innerHTML = message;
+      resultEl.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'border', 'border-green-200',
+                             'bg-red-50', 'text-red-700', 'border', 'border-red-200',
+                             'bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+      
+      switch(type) {
+        case 'success':
+          resultEl.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
+          break;
+        case 'error':
+          resultEl.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+          break;
+        case 'loading':
+          resultEl.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+          break;
+      }
+    }
+
+    // 为复选框添加动画效果
+    document.querySelectorAll('input[name="questionType"]').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const label = this.closest('label');
+        if (this.checked) {
+          label.classList.add('border-primary', 'bg-primary/5');
+        } else {
+          label.classList.remove('border-primary', 'bg-primary/5');
+        }
+      });
+    });
   </script>
 </body>
 </html>
