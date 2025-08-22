@@ -145,7 +145,7 @@ function markFileSkipped(fileType: string, fileName: string) {
 
 // 定义文件类型和对应处理函数的映射
 const fileTypeHandlers = {
-  '课程资料': handleCourseMaterial,
+  // '课程资料': handleCourseMaterial,
   '日积月累': handleDailyAccumulation,
   '融会贯通': handleIntegration
 };
@@ -157,7 +157,7 @@ test('课程资料、日积月累、融会贯通 刷新样式', async ({ page })
   initFailedLog(); 
   initSkippedLog();
   
-  test.setTimeout(21600000);
+  test.setTimeout(21600000);//6小时
   await page.goto('https://admin.aixuexi.com/#/login');
   
   // 生产环境账号密码
@@ -170,12 +170,17 @@ test('课程资料、日积月累、融会贯通 刷新样式', async ({ page })
   await page.getByRole('combobox').locator('span').nth(1).click();
   await page.getByRole('option', { name: '小学数学' }).click();
   await page.getByText('生产中心').click();
-  await page.getByText('测试专用公共云盘').click();
-  await page.getByText('zhangq测试').click();
-  await page.getByText('106-能力提高').click();
+  // await page.getByText('测试专用公共云盘').click();
+  // await page.getByText('zhangq测试').click();
+  // await page.getByText('25-26年能力强化Y/苏教版/五年级（Y苏教）/春季').click();
+
+  await page.locator('div.ant-layout-sider-children > ul > li > div').getByText('TSM公共云盘').click();
+  await page.getByText('25-26年思维突破α').click();
+  await page.getByText('六年级').click();
+  // await page.getByText('六年级（Y人教）').click();
   
   // 开始遍历文件夹
-  await traverseFolders(page, '106-能力提高');
+  await traverseFolders(page, '春季');
 
   // 所有文件处理完成后输出统计结果
   console.log('\n===== 文件处理统计结果 =====');
@@ -201,7 +206,7 @@ async function traverseFolders(page, folderName: string) {
   
   console.log(`进入文件夹: ${folderName}`);
   
-  await page.getByText(folderName).click();
+  await page.getByText(folderName, { exact: true }).click();
   await page.waitForTimeout(4000);
   await page.waitForFunction(
     () => {
