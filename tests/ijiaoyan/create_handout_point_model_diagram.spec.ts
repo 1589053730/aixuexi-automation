@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/loginf.fixture';
 
-test('创建试卷-添加题目（知识图谱试题-按点模图谱）-保存发布-生产完成', async ({ loggedInPage: page }) => {
+test('创建讲义-添加题目（知识图谱试题-按点模图谱）-保存发布-生产完成', async ({ loggedInPage: page }) => {
 
   test.setTimeout(1800000);
 

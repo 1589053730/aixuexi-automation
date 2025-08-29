@@ -55,22 +55,27 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
 app.post('/run-test', (req, res) => {
   // const { resourceType, questionTypes, courseInfo } = req.body;
   // let testScript = '';
-  const { resourceType, questionTypes, courseName, presetCourse } = req.body;
+  const { resourceTypes, questionTypes, courseName, presetCourse,presetCourseText } = req.body;
   const scriptsToRun = [];
   console.log(`课程名称: ${courseName}`);
+  console.log("选中的资源类型是："+resourceTypes);
+  console.log("选中的预设课程设置："+presetCourseText);
 
-  // 收集需要执行的脚本
-  if (courseName) {
+  if (resourceTypes.includes('course') && courseName) {
     scriptsToRun.push('create_course.spec.ts');
   }
 
-  if (resourceType === 'exam') {
+  if (resourceTypes.includes('exam')) {
     scriptsToRun.push('create_exam_point_model_diagram.spec.ts');
-  } else if (resourceType === 'course' && !courseName) {
-    // 处理只选择了course类型但没有课程名称的情况（如果需要）
-    // scriptsToRun.push('create_course.spec.ts');
-  } else if (resourceType && resourceType !== 'course' && resourceType !== 'exam') {
-    return res.status(400).json({ message: '无效的资源类型' });
+  }
+
+  if (resourceTypes.includes('handout')) {
+    scriptsToRun.push('create_handout_point_model_diagram.spec.ts');
+  }
+
+  const invalidTypes = resourceTypes.filter(type => !['course', 'exam'].includes(type));
+  if (invalidTypes.length > 0) {
+    return res.status(400).json({ message: `无效的资源类型：${invalidTypes.join(',')}` });
   }
 
   console.log(`要执行的文件数量: ${scriptsToRun.length}`);
@@ -78,67 +83,19 @@ app.post('/run-test', (req, res) => {
     return res.status(400).json({ message: '没有需要执行的脚本' });
   }
 
+  const processedQuestionTypes = Array.isArray(questionTypes)
+    ? JSON.stringify(questionTypes)
+    : questionTypes ? JSON.stringify([questionTypes]) : '[]';
+
   const env = {
     ...process.env,
-    questionTypes: questionTypes?.join(',') || '',
+    questionTypes: processedQuestionTypes, // 使用处理后的值
     courseName: courseName || '',
-    presetCourse: presetCourse || ''
+    presetCourse: presetCourse || '',
+    presetCourseText: presetCourseText || ''
   };
 
   runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
-
-  // const courseName = req.body.courseName;
-  // if(courseName !== ''){
-  //   testScript = 'create_course.spec.ts';
-  // }
-
-  // 根据资源类型选择要执行的 Playwright 测试脚本
-  // if (resourceType === 'exam') {
-  //   testScript = 'create_exam_point_model_diagram.spec.ts';
-  // } else if (resourceType === 'course') {
-  //   // testScript = 'create_course.spec.ts';
-  // } else {
-  //   return res.status(400).json({ message: '无效的资源类型' });
-  // }
-
-  // 拼接 Playwright 执行命令 示例：npx playwright test tests/ijiaoyan/create_exam_point_model_diagram.spec.ts --headed --project=chromium questionTypes=choice
-  // const cmdArgs = [
-  //   'playwright', 'test', 
-  //   `tests/ijiaoyan/${testScript}`,
-  //   '--headed', 
-  //   '--project=chromium'
-  // ];
-
-  // console.log('即将执行的命令:', cmdArgs.join(' '));
-
-  // 启动子进程
-  // const child = spawn('npx', cmdArgs, {
-  // env: {
-  //     ...process.env, 
-  //     questionTypes: questionTypes.join(','),
-  //     courseName: req.body.courseName || '', 
-  //     presetCourse: req.body.presetCourse || '' 
-  //   }
-  // });
-
-  // 实时捕获子进程的 stdout 并打印到主进程终端
-  // child.stdout.on('data', (data) => {
-  //   console.log(`[Playwright 输出] ${data}`); // 这里会打印 create_exam.spec.ts 的 console.log
-  //   // 若需要，也可以实时将输出返回给前端（需用流或WebSocket）
-  // });
-
-  // 实时捕获子进程的 stderr 并打印到主进程终端
-  // child.stderr.on('data', (data) => {
-  //   console.error(`[Playwright 错误] ${data}`); // 打印测试中的错误日志
-  // });
-
-  // 子进程执行结束时的处理
-  // child.on('close', (code) => {
-  //   if (code !== 0) {
-  //     return res.status(500).json({ message: `执行失败，退出码：${code}` });
-  //   }
-  //   res.json({ message: '执行成功！' });
-  // });
 });
 
 const PORT = 3000;

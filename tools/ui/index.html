@@ -80,7 +80,8 @@
           <!-- 新建课程 -->
           <div class="form-group">
             <label for="courseName" class="block text-sm font-medium text-gray-700 mb-2">
-              新建课程 <span class="text-red-500">*</span>
+              新建课程
+               <!-- <span class="text-red-500">*</span> -->
             </label>
             <div class="relative mb-3">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -94,13 +95,13 @@
               <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
                 <input type="radio" name="presetCourse" value="A" 
                   class="w-5 h-5 text-primary form-focus">
-                <span class="ml-3 text-gray-700">人教版-思维创新-初一-暑假-2025-2讲-三阶课</span>
+                <span class="ml-3 text-gray-700">人教版 / 思维创新 / 初一 / 暑假 / 2025 / 2讲 / 三阶课</span>
               </label>
               
               <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
                 <input type="radio" name="presetCourse" value="B" 
                   class="w-5 h-5 text-primary form-focus">
-                <span class="ml-3 text-gray-700">人教版-思维突破-初一-暑假-2025-2讲-三阶课</span>
+                <span class="ml-3 text-gray-700">人教版 / 思维突破 / 初一 / 暑假 / 2025 / 2讲 / 三阶课</span>
               </label>
             </div>
           </div>
@@ -119,7 +120,7 @@
                   </div>
                   <div>
                     <h3 class="font-medium text-lg">试卷</h3>
-                    <p class="text-sm text-gray-500">包含各类题型的综合测试卷</p>
+                    <!-- <p class="text-sm text-gray-500">包含各类题型的综合测试卷</p> -->
                   </div>
                 </div>
                 
@@ -128,7 +129,7 @@
                   <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
                     <input type="checkbox" name="examQuestionType" value="choice" 
                       class="w-4 h-4 text-primary form-focus rounded">
-                    <span class="ml-2 text-gray-700 text-sm">选择题 (单选/多选)</span>
+                    <span class="ml-2 text-gray-700 text-sm">选择题</span>
                   </label>
                   
                   <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
@@ -158,48 +159,50 @@
               </div>
               
               <!-- 讲义选项 -->
-              <div class="resource-type-card border-2 rounded-xl p-5 cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5" data-type="course">
+              <div class="resource-type-card border-2 rounded-xl p-5 cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5" data-type="handout">
                 <div class="flex items-start mb-3">
                   <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-3">
                     <i class="fa fa-book text-xl"></i>
                   </div>
                   <div>
                     <h3 class="font-medium text-lg">讲义</h3>
-                    <p class="text-sm text-gray-500">包含知识点讲解和例题的教学材料</p>
+                    <!-- <p class="text-sm text-gray-500">包含知识点讲解和例题的教学材料</p> -->
                   </div>
                 </div>
                 
                 <!-- 讲义题型选择 -->
                 <div class="resource-type-content mt-4 space-y-2 pl-13">
                   <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
-                    <input type="checkbox" name="courseQuestionType" value="choice" 
+                    <input type="checkbox" name="handoutQuestionType" value="choice" 
                       class="w-4 h-4 text-primary form-focus rounded">
                     <span class="ml-2 text-gray-700 text-sm">例题-选择题</span>
                   </label>
                   
                   <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
-                    <input type="checkbox" name="courseQuestionType" value="fill" 
+                    <input type="checkbox" name="handoutQuestionType" value="fill" 
                       class="w-4 h-4 text-primary form-focus rounded">
                     <span class="ml-2 text-gray-700 text-sm">例题-填空题</span>
                   </label>
+
+                  <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
+                    <input type="checkbox" name="handoutQuestionType" value="explanation" 
+                      class="w-4 h-4 text-primary form-focus rounded">
+                    <span class="ml-2 text-gray-700 text-sm">例题-判断题</span>
+                  </label>
                   
                   <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
-                    <input type="checkbox" name="courseQuestionType" value="answer" 
+                    <input type="checkbox" name="handoutQuestionType" value="answer" 
                       class="w-4 h-4 text-primary form-focus rounded">
                     <span class="ml-2 text-gray-700 text-sm">例题-解答题</span>
                   </label>
 
                   <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
-                    <input type="checkbox" name="courseQuestionType" value="comprehensive" 
+                    <input type="checkbox" name="handoutQuestionType" value="comprehensive" 
                       class="w-4 h-4 text-primary form-focus rounded">
                     <span class="ml-2 text-gray-700 text-sm">例题-综合题</span>
                   </label>
 
-                  <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
-                    <input type="checkbox" name="courseQuestionType" value="explanation" 
-                      class="w-4 h-4 text-primary form-focus rounded">
-                    <span class="ml-2 text-gray-700 text-sm">知识点讲解</span>
-                  </label>
+                  
                 </div>
               </div>
             </div>
@@ -236,7 +239,6 @@
   </footer>
 
   <script>
-    // 资源类型卡片点击效果
     document.querySelectorAll('.resource-type-card').forEach(card => {
       card.addEventListener('click', function(e) {
         // 防止点击复选框时触发卡片选择
@@ -262,12 +264,36 @@
     });
 
     async function submitForm() {
-      // 获取选中的资源类型
-      const selectedTypes = Array.from(
+
+      const cardTypes = Array.from(
         document.querySelectorAll('.resource-type-card.resource-card-active')
       ).map(card => card.dataset.type);
+
+      // 1. 获取课程信息
+      const courseName = document.getElementById('courseName').value;
+      // const presetCourse = document.querySelector('input[name="presetCourse"]:checked')?.value;
+      const resultEl = document.getElementById('result');
+
+      let selectedTypes = [...cardTypes]; // 复制卡片类型
+      // 只有当课程名称有值时才添加course类型，为空时不添加
+      if (courseName.trim()) { 
+        selectedTypes.push('course'); 
+      }
+
+      // 去重（防止重复添加）
+      selectedTypes = [...new Set(selectedTypes)];
+
+      // 2. 获取选中的预设课程
+      let presetCourse = ''; 
+      let presetCourseText = '';
+      const checkedPreset = document.querySelector('input[name="presetCourse"]:checked');
+      if (checkedPreset) {
+        presetCourse = checkedPreset.value; 
+        const label = checkedPreset.closest('label');
+        presetCourseText = label.querySelector('span').textContent;
+      }
       
-      // 获取对应类型的选中题型
+      // 3. 获取对应类型的选中题型
       const questionTypes = {};
       if (selectedTypes.includes('exam')) {
         questionTypes.exam = Array.from(
@@ -275,29 +301,16 @@
         ).map(el => el.value);
       }
       
-      if (selectedTypes.includes('course')) {
+      if (selectedTypes.includes('handout')) {
         questionTypes.course = Array.from(
-          document.querySelectorAll('input[name="courseQuestionType"]:checked')
+          document.querySelectorAll('input[name="handoutQuestionType"]:checked')
         ).map(el => el.value);
       }
       
-      // 获取课程信息
-      const courseName = document.getElementById('courseName').value;
-      const presetCourse = document.querySelector('input[name="presetCourse"]:checked')?.value;
-      const resultEl = document.getElementById('result');
-
-      // 验证选择
+      // 验证：只需要至少选择一种资源类型（试卷或讲义）
       if (selectedTypes.length === 0) {
         showResult('请至少选择一种资源类型！', 'error');
         return;
-      }
-      
-      // 验证每种选中的资源类型都有至少一种题型
-      for (const type of selectedTypes) {
-        if (!questionTypes[type] || questionTypes[type].length === 0) {
-          showResult(`请为${type === 'exam' ? '试卷' : '讲义'}选择至少一种题型！`, 'error');
-          return;
-        }
       }
 
       // 显示加载状态
@@ -312,7 +325,8 @@
             resourceTypes: selectedTypes,
             questionTypes,
             courseName,
-            presetCourse
+            presetCourse, 
+            presetCourseText
           })
         });
         
