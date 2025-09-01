@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件夹复制工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            neutral: '#86909C',
+            success: '#52C41A',
+            warning: '#FAAD14',
+            danger: '#FF4D4F',
+            dark: '#1D2129',
+            light: '#F2F3F5'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .transition-height {
+        transition: max-height 0.3s ease-in-out;
+      }
+      .scrollbar-thin {
+        scrollbar-width: thin;
+      }
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 4px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 2px;
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-gray-50 min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- 头部标题 -->
+    <header class="mb-8 text-center">
+      <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-2 flex items-center justify-center">
+        <i class="fa fa-cloud-transfer text-primary mr-3"></i>
+        文件夹复制
+      </h1>
+      <p class="text-neutral">复制文件夹</p>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+      <form id="copyForm" class="space-y-8">
+        <!-- 学科选择 -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-semibold text-dark flex items-center">
+            <i class="fa fa-book text-primary mr-2"></i>
+            选择学科
+          </h2>
+          
+          <div class="relative">
+            <select id="subject" name="subject" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
+              <option value="">请选择学科</option>
+              <option value="初中语文">初中语文</option>
+              <option value="初中数学">初中数学</option>
+              <option value="初中物理">初中物理</option>
+              <option value="初中化学">初中化学</option>
+              <option value="小学英语">小学英语</option>
+              <option value="小学数学">小学数学</option>
+              <option value="小学语文">小学语文</option>
+              <option value="高中数学">高中数学</option>
+              <option value="高中化学">高中化学</option>
+              <option value="高中物理">高中物理</option>
+              <option value="初中英语">初中英语</option>
+              <option value="初中科学">初中科学</option>
+              <option value="初中生物">初中生物</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+              <i class="fa fa-chevron-down text-xs"></i>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 源路径选择 -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-semibold text-dark flex items-center">
+            <i class="fa fa-folder-open text-primary mr-2"></i>
+            源文件夹设置
+          </h2>
+          
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">源云盘</label>
+              <div class="relative">
+                <select id="sourceDrive" name="sourceDrive" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
+                  <option value="">选择源位置</option>
+                  <option value="testDrive">测试专用公共云盘</option>
+                  <option value="TSMDrive">TSM公共云盘</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                  <i class="fa fa-chevron-down text-xs"></i>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">源文件夹路径</label>
+              <div class="relative">
+                <input type="text" id="sourcePath" name="sourcePath" placeholder="例如: /我的文件夹/第一讲" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                <button type="button" id="browseSource" class="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80 transition-colors">
+                  <i class="fa fa-search"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 目标路径选择 -->
+        <div class="space-y-4 pt-4 border-t border-gray-100">
+          <h2 class="text-xl font-semibold text-dark flex items-center">
+            <i class="fa fa-folder-open-o text-secondary mr-2"></i>
+            目标文件夹设置
+          </h2>
+          
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">目标云盘</label>
+              <div class="relative">
+                <select id="targetDrive" name="targetDrive" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
+                  <option value="">选择目标位置</option>
+                  <option value="testDrive">测试专用公共云盘</option>
+                  <option value="TSMDrive">TSM公共云盘</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                  <i class="fa fa-chevron-down text-xs"></i>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">目标文件夹路径</label>
+              <div class="relative">
+                <input type="text" id="targetPath" name="targetPath" placeholder="例如: /我的文件夹/第一讲" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                <button type="button" id="browseTarget" class="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80 transition-colors">
+                  <i class="fa fa-search"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 执行按钮 -->
+        <div class="flex justify-center pt-4 border-t border-gray-100">
+          <button type="submit" id="copyButton" class="bg-primary hover:bg-primary/90 text-white font-medium px-8 py-3 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center">
+            <i class="fa fa-copy mr-2"></i>
+            执行文件夹复制
+          </button>
+        </div>
+      </form>
+    </main>
+    
+    <!-- 执行状态区域 -->
+    <div id="statusSection" class="bg-white rounded-xl shadow-lg p-6 mb-8 hidden">
+      <h2 class="text-xl font-semibold text-dark mb-4 flex items-center">
+        <i class="fa fa-spinner fa-spin mr-2" id="statusIcon"></i>
+        <span id="statusTitle">复制操作准备中</span>
+      </h2>
+      
+      <div class="bg-light rounded-lg p-4 h-48 overflow-y-auto scrollbar-thin mb-4">
+        <pre id="executionLog" class="text-sm text-gray-700 whitespace-pre-wrap"></pre>
+      </div>
+      
+      <div class="flex justify-end">
+        <button id="cancelButton" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-lg transition-colors">
+          <i class="fa fa-times mr-1"></i> 取消操作
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 通知组件 -->
+  <div id="notification" class="fixed bottom-6 right-6 p-4 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 max-w-sm hidden"></div>
+
+  <script>
+    // DOM元素
+    const copyForm = document.getElementById('copyForm');
+    const subject = document.getElementById('subject'); 
+    const sourceDrive = document.getElementById('sourceDrive');
+    const sourcePath = document.getElementById('sourcePath');
+    const targetDrive = document.getElementById('targetDrive');
+    const targetPath = document.getElementById('targetPath');
+    const browseSource = document.getElementById('browseSource');
+    const browseTarget = document.getElementById('browseTarget');
+    const sourcePreview = document.getElementById('sourcePreview');
+    const statusSection = document.getElementById('statusSection');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusIcon = document.getElementById('statusIcon');
+    const executionLog = document.getElementById('executionLog');
+    const copyButton = document.getElementById('copyButton');
+    const cancelButton = document.getElementById('cancelButton');
+    const notification = document.getElementById('notification');
+    const historyList = document.getElementById('historyList');
+    
+    // 模拟文件夹浏览功能
+    browseSource.addEventListener('click', () => {
+      if (!sourceDrive.value) {
+        showNotification('请先选择源云盘', 'warning');
+        return;
+      }
+      showNotification(`正在浏览 ${getDriveName(sourceDrive.value)}...`, 'info');
+      
+      // 模拟加载文件夹内容
+      setTimeout(() => {
+        const previewContent = `
+          <div class="flex items-center"><i class="fa fa-folder text-warning mr-2"></i> 文档资料</div>
+          <div class="flex items-center ml-4"><i class="fa fa-file-word-o text-primary mr-2"></i> 项目计划.docx</div>
+          <div class="flex items-center ml-4"><i class="fa fa-file-excel-o text-success mr-2"></i> 数据统计.xlsx</div>
+          <div class="flex items-center"><i class="fa fa-folder text-warning mr-2"></i> 图片资源</div>
+          <div class="flex items-center ml-4"><i class="fa fa-file-image-o text-danger mr-2"></i> 截图1.png</div>
+          <div class="flex items-center ml-4"><i class="fa fa-file-image-o text-danger mr-2"></i> 截图2.png</div>
+          <div class="flex items-center"><i class="fa fa-file-pdf-o text-danger mr-2"></i> 说明文档.pdf</div>
+        `;
+        if (sourcePreview) sourcePreview.innerHTML = previewContent;
+        
+        if (!sourcePath.value) {
+          sourcePath.value = '/默认路径/示例文件夹';
+        }
+      }, 800);
+    });
+    
+    browseTarget.addEventListener('click', () => {
+      if (!targetDrive.value) {
+        showNotification('请先选择目标云盘', 'warning');
+        return;
+      }
+      showNotification(`正在浏览 ${getDriveName(targetDrive.value)}...`, 'info');
+      
+      // 模拟加载文件夹内容
+      setTimeout(() => {
+        if (!targetPath.value) {
+          targetPath.value = '/默认路径/目标文件夹';
+        }
+      }, 800);
+    });
+    
+    // 表单提交处理
+    copyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // 验证表单
+      if (!validateForm()) {
+        return;
+      }
+      
+      // 显示状态区域
+      statusSection.classList.remove('hidden');
+      executionLog.innerHTML = '';
+      updateStatus('开始准备复制操作...', 'info');
+      
+      // 禁用按钮
+      copyButton.disabled = true;
+      copyButton.classList.add('opacity-70', 'cursor-not-allowed');
+      cancelButton.classList.remove('hidden');
+      
+      // 准备数据 - 包含学科信息
+      const formData = {
+        subject: subject.value,  // 新增学科数据
+        sourceDrive: sourceDrive.value,
+        sourcePath: sourcePath.value,
+        targetDrive: targetDrive.value,
+        targetPath: targetPath.value,
+        options: {
+          overwrite: document.getElementById('overwrite')?.checked || false,
+          includeSubfolders: document.getElementById('includeSubfolders')?.checked || false,
+          copyPermissions: document.getElementById('copyPermissions')?.checked || false,
+          notifyOnComplete: document.getElementById('notifyOnComplete')?.checked || false
+        }
+      };
+      
+      try {
+        // 调用后端API执行复制操作
+        const response = await fetch('http://localhost:3000/api/copy-folder', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              copyOptions: formData 
+            })
+          });
+        
+        // 模拟执行过程（实际项目中应该根据API响应和WebSocket更新状态）
+        simulateCopyProcess(formData);
+        
+        const result = await response.json();
+        if (response.ok) {
+          updateStatus('所有复制操作已完成', 'success');
+          showNotification('文件夹复制成功！', 'success');
+          addToHistory(formData, 'success');
+        } else {
+          throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+        updateStatus(`复制失败: ${error.message}`, 'error');
+        showNotification(`复制失败: ${error.message}`, 'error');
+        addToHistory(formData, 'error');
+      } finally {
+        // 恢复按钮状态
+        copyButton.disabled = false;
+        copyButton.classList.remove('opacity-70', 'cursor-not-allowed');
+        cancelButton.classList.add('hidden');
+      }
+    });
+    
+    // 取消按钮事件
+    cancelButton.addEventListener('click', () => {
+      if (confirm('确定要取消当前复制操作吗？')) {
+        updateStatus('操作已被用户取消', 'warning');
+        copyButton.disabled = false;
+        copyButton.classList.remove('opacity-70', 'cursor-not-allowed');
+        cancelButton.classList.add('hidden');
+        showNotification('复制操作已取消', 'info');
+      }
+    });
+    
+    // 辅助函数：验证表单 - 新增学科验证
+    function validateForm() {
+      if (!subject.value) {  // 验证学科选择
+        showNotification('请选择学科', 'warning');
+        return false;
+      }
+      
+      if (!sourceDrive.value) {
+        showNotification('请选择源云盘', 'warning');
+        return false;
+      }
+      
+      if (!sourcePath.value.trim()) {
+        showNotification('请输入源文件夹路径', 'warning');
+        sourcePath.focus();
+        return false;
+      }
+      
+      if (!targetDrive.value) {
+        showNotification('请选择目标云盘', 'warning');
+        return false;
+      }
+      
+      if (!targetPath.value.trim()) {
+        showNotification('请输入目标文件夹路径', 'warning');
+        targetPath.focus();
+        return false;
+      }
+      
+      if (sourceDrive.value === targetDrive.value && sourcePath.value.trim() === targetPath.value.trim()) {
+        showNotification('源路径和目标路径不能相同', 'warning');
+        return false;
+      }
+      
+      return true;
+    }
+    
+    // 辅助函数：更新状态
+    function updateStatus(message, type) {
+      statusTitle.textContent = message;
+      logToConsole(message);
+      
+      // 更新图标
+      statusIcon.className = '';
+      switch(type) {
+        case 'info':
+          statusIcon.className = 'fa fa-spinner fa-spin mr-2 text-primary';
+          break;
+        case 'success':
+          statusIcon.className = 'fa fa-check-circle mr-2 text-success';
+          break;
+        case 'error':
+          statusIcon.className = 'fa fa-exclamation-circle mr-2 text-danger';
+          break;
+        case 'warning':
+          statusIcon.className = 'fa fa-exclamation-triangle mr-2 text-warning';
+          break;
+      }
+    }
+    
+    // 辅助函数：添加日志
+    function logToConsole(message) {
+      const timestamp = new Date().toLocaleTimeString();
+      executionLog.innerHTML += `[${timestamp}] ${message}\n`;
+      executionLog.scrollTop = executionLog.scrollHeight;
+    }
+    
+    // 辅助函数：显示通知
+    function showNotification(message, type = 'info') {
+      notification.textContent = message;
+      notification.className = 'fixed bottom-6 right-6 p-4 rounded-lg shadow-lg transform transition-all duration-300 max-w-sm flex items-center';
+      
+      // 设置通知类型样式
+      switch(type) {
+        case 'success':
+          notification.classList.add('bg-success/10', 'text-success', 'border', 'border-success/30');
+          notification.innerHTML = `<i class="fa fa-check-circle mr-2"></i> ${message}`;
+          break;
+        case 'error':
+          notification.classList.add('bg-danger/10', 'text-danger', 'border', 'border-danger/30');
+          notification.innerHTML = `<i class="fa fa-exclamation-circle mr-2"></i> ${message}`;
+          break;
+        case 'warning':
+          notification.classList.add('bg-warning/10', 'text-warning', 'border', 'border-warning/30');
+          notification.innerHTML = `<i class="fa fa-exclamation-triangle mr-2"></i> ${message}`;
+          break;
+        default:
+          notification.classList.add('bg-primary/10', 'text-primary', 'border', 'border-primary/30');
+          notification.innerHTML = `<i class="fa fa-info-circle mr-2"></i> ${message}`;
+      }
+      
+      // 显示通知
+      setTimeout(() => {
+        notification.classList.remove('translate-y-20', 'opacity-0');
+      }, 10);
+      
+      // 3秒后隐藏通知
+      setTimeout(() => {
+        notification.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+    
+    // 获取云盘名称
+    function getDriveName(value) {
+      // 找到源云盘下拉列表中值为value的选项
+      const sourceOption = Array.from(sourceDrive.options).find(option => option.value === value);
+      if (sourceOption) {
+        return sourceOption.text;
+      }
+      
+      // 从目标云盘下拉列表中查找
+      const targetOption = Array.from(targetDrive.options).find(option => option.value === value);
+      if (targetOption) {
+        return targetOption.text;
+      }
+      
+      // 如果都没找到，返回原始值
+      return value;
+    }
+    
+    // 辅助函数：模拟复制过程
+    function simulateCopyProcess(data) {
+      const steps = [
+        `选择的学科: ${getSubjectName(data.subject)}`,  // 显示选中的学科
+        `连接到 ${getDriveName(data.sourceDrive)} 和 ${getDriveName(data.targetDrive)}`,
+        `验证源路径: ${data.sourcePath}`,
+        `验证目标路径: ${data.targetPath}`
+      ];
+      
+      let stepIndex = 0;
+      
+      const interval = setInterval(() => {
+        if (stepIndex < steps.length) {
+          updateStatus(steps[stepIndex], 'info');
+          stepIndex++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 800);
+      
+      // 如果有取消按钮点击，清除定时器
+      cancelButton.onclick = () => {
+        clearInterval(interval);
+      };
+    }
+    
+    // 新增辅助函数：获取学科名称
+    function getSubjectName(value) {
+      const subjectNames = {
+        'junior_chinese': '初中语文',
+        'junior_math': '初中数学',
+        'junior_physics': '初中物理',
+        'junior_chemistry': '初中化学',
+        'primary_english': '小学英语',
+        'primary_math': '小学数学',
+        'primary_chinese': '小学语文',
+        'senior_math': '高中数学',
+        'senior_chemistry': '高中化学',
+        'senior_physics': '高中物理',
+        'junior_english': '初中英语',
+        'junior_science': '初中科学',
+        'junior_biology': '初中生物'
+      };
+      return subjectNames[value] || value;
+    }
+    
+    // 辅助函数：添加到历史记录
+    function addToHistory(data, status) {
+      const date = new Date().toLocaleString();
+      const statusClass = status === 'success' ? 'text-success' : 'text-danger';
+      const statusIcon = status === 'success' ? 'fa-check-circle' : 'fa-times-circle';
+      
+      const historyItem = document.createElement('div');
+      historyItem.className = 'p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors';
+      historyItem.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="font-medium text-sm">${getSubjectName(data.subject)} - 从 ${getDriveName(data.sourceDrive)} 复制到 ${getDriveName(data.targetDrive)}</div>
+            <div class="text-xs text-neutral mt-1">${data.sourcePath} → ${data.targetPath}</div>
+          </div>
+          <div class="flex items-center ${statusClass} text-sm">
+            <i class="fa ${statusIcon} mr-1"></i>
+            ${status === 'success' ? '成功' : '失败'}
+          </div>
+        </div>
+        <div class="text-xs text-neutral mt-2">${date}</div>
+      `;
+      
+      // 如果是第一条记录，先清空"暂无记录"提示
+      if (historyList && historyList.querySelector('.italic')) {
+        historyList.innerHTML = '';
+      }
+      
+      if (historyList) historyList.prepend(historyItem);
+    }
+  </script>
+</body>
+</html>

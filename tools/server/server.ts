@@ -1,10 +1,9 @@
 import express from 'express';
-// import { exec } from 'child_process';
 import { exec, spawn } from 'child_process';
 const app = express();
 app.use(express.json());
 
-// 允许跨域（根据实际需求调整）
+// 允许跨域
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST');
@@ -89,7 +88,7 @@ app.post('/run-test', (req, res) => {
 
   const env = {
     ...process.env,
-    questionTypes: processedQuestionTypes, // 使用处理后的值
+    questionTypes: processedQuestionTypes, 
     courseName: courseName || '',
     presetCourse: presetCourse || '',
     presetCourseText: presetCourseText || ''

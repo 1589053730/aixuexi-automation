@@ -1,0 +1,23 @@
+[2025-08-29T09:08:38.950Z] 服务器启动，监听端口 3000
+[2025-08-29T09:14:02.557Z] 服务器启动，监听端口 3000
+[2025-08-29T09:14:17.953Z] 开始复制操作: 
+      学科: junior_chemistry,
+      源: onedrive/1/2,
+      目标: onedrive/3/4
+    
+[2025-08-29T09:14:17.953Z] 执行命令: python /Users/zhangq/Documents/workspaces/aixuexi-automation/tools/server/automation/copy_automation.py --subject="junior_chemistry" --source-drive="onedrive" --source-path="/1/2" --target-drive="onedrive" --target-path="/3/4"
+[2025-08-29T09:14:17.956Z] 用户取消了复制操作
+[2025-08-29T09:14:17.959Z] 复制失败: Command failed: python /Users/zhangq/Documents/workspaces/aixuexi-automation/tools/server/automation/copy_automation.py --subject="junior_chemistry" --source-drive="onedrive" --source-path="/1/2" --target-drive="onedrive" --target-path="/3/4"
+
+[2025-08-29T09:33:03.400Z] 服务器启动，监听端口 3000
+[2025-08-29T09:33:16.062Z] 开始复制操作: 
+      学科: junior_chemistry,
+      源: testDrive/1/2,
+      目标: testDrive/3/4
+    
+[2025-08-29T09:43:04.044Z] 服务器启动，监听端口 3000
+[2025-08-29T09:43:46.199Z] 开始复制操作: 
+      学科: junior_chemistry,
+      源: testDrive/1/2,
+      目标: testDrive/3/4
+    
