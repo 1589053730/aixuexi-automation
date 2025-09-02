@@ -108,8 +108,8 @@
               <div class="relative">
                 <select id="sourceDrive" name="sourceDrive" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
                   <option value="">选择源位置</option>
-                  <option value="testDrive">测试专用公共云盘</option>
-                  <option value="TSMDrive">TSM公共云盘</option>
+                  <option value="测试专用公共云盘">测试专用公共云盘</option>
+                  <option value="TSM公共云盘">TSM公共云盘</option>
                 </select>
                 <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
                   <i class="fa fa-chevron-down text-xs"></i>
@@ -143,8 +143,8 @@
               <div class="relative">
                 <select id="targetDrive" name="targetDrive" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
                   <option value="">选择目标位置</option>
-                  <option value="testDrive">测试专用公共云盘</option>
-                  <option value="TSMDrive">TSM公共云盘</option>
+                  <option value="测试专用公共云盘">测试专用公共云盘</option>
+                  <option value="TSM公共云盘">TSM公共云盘</option>
                 </select>
                 <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
                   <i class="fa fa-chevron-down text-xs"></i>
@@ -172,6 +172,7 @@
             执行文件夹复制
           </button>
         </div>
+        <div id="status"></div>
       </form>
     </main>
     
@@ -198,7 +199,7 @@
   <div id="notification" class="fixed bottom-6 right-6 p-4 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 max-w-sm hidden"></div>
 
   <script>
-    // DOM元素
+   
     const copyForm = document.getElementById('copyForm');
     const subject = document.getElementById('subject'); 
     const sourceDrive = document.getElementById('sourceDrive');
@@ -268,10 +269,13 @@
         return;
       }
       
+      // 显示执行中状态
+      document.getElementById('status').textContent = '执行中...';
+
       // 显示状态区域
-      statusSection.classList.remove('hidden');
-      executionLog.innerHTML = '';
-      updateStatus('开始准备复制操作...', 'info');
+      // statusSection.classList.remove('hidden');
+      // executionLog.innerHTML = '';
+      // updateStatus('开始准备复制操作...', 'info');
       
       // 禁用按钮
       copyButton.disabled = true;
@@ -305,21 +309,25 @@
             })
           });
         
-        // 模拟执行过程（实际项目中应该根据API响应和WebSocket更新状态）
-        simulateCopyProcess(formData);
+        // 模拟执行过程
+        // simulateCopyProcess(formData);
         
         const result = await response.json();
-        if (response.ok) {
-          updateStatus('所有复制操作已完成', 'success');
-          showNotification('文件夹复制成功！', 'success');
-          addToHistory(formData, 'success');
+        if (response.success) {
+          // updateStatus('所有复制操作已完成', 'success');
+          // showNotification('文件夹复制成功！', 'success');
+          // addToHistory(formData, 'success');
+          checkStatus(result.taskId);
         } else {
-          throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
+          // throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
+          document.getElementById('status').textContent = '启动失败: ' + result.message;
+
         }
       } catch (error) {
-        updateStatus(`复制失败: ${error.message}`, 'error');
-        showNotification(`复制失败: ${error.message}`, 'error');
-        addToHistory(formData, 'error');
+        // updateStatus(`复制失败: ${error.message}`, 'error');
+        // showNotification(`复制失败: ${error.message}`, 'error');
+        // addToHistory(formData, 'error');
+        document.getElementById('status').textContent = '错误: ' + error.message;
       } finally {
         // 恢复按钮状态
         copyButton.disabled = false;
@@ -327,6 +335,23 @@
         cancelButton.classList.add('hidden');
       }
     });
+
+    async function checkStatus(taskId) {
+            try {
+                const response = await fetch(`/check-status?taskId=${taskId}`);
+                const status = await response.json();
+
+                if (status.completed) {
+                    document.getElementById('status').textContent = '执行完成!';
+                    alert('文件复制和生产已完成'); // 弹出完成通知
+                } else {
+                    document.getElementById('status').textContent = `执行中: ${status.progress || ''}`;
+                    setTimeout(() => checkStatus(taskId), 2000); // 每2秒检查一次
+                }
+            } catch (error) {
+                document.getElementById('status').textContent = '检查状态错误: ' + error.message;
+            }
+        }
     
     // 取消按钮事件
     cancelButton.addEventListener('click', () => {
@@ -341,7 +366,7 @@
     
     // 辅助函数：验证表单 - 新增学科验证
     function validateForm() {
-      if (!subject.value) {  // 验证学科选择
+      if (!subject.value) { 
         showNotification('请选择学科', 'warning');
         return false;
       }

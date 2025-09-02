@@ -1,24 +1,29 @@
 import { test, expect } from '../../fixtures/loginf.fixture';
 
-test('复制文件夹-保存发布-生产完成', async ({ loggedInPage: page }) => {
+test('选择文件夹--复制文件夹--生产完成', async ({ loggedInPage: page }) => {
 
   test.setTimeout(1800000);
 
-//   const subject = process.env.subject;
-//   const sourceDrive = process.env.sourceDrive;
-//   const sourcePath = process.env.sourcePath;
-//   const targetDrive = process.env.targetDrive;
-  // const targetPath = process.env.targetPath;
-  const sourcePath="zhangq测试/第一讲"
-  const subject = "初中化学";
-  const sourceDrive = "测试专用公共云盘";
-  const targetDrive = "测试专用公共云盘";
-  const targetPath = "zhangq测试"
+  const subject = process.env.subject;
+  const sourceDrive = process.env.sourceDrive;
+  const sourcePath = process.env.sourcePath;
+  const targetDrive = process.env.targetDrive;
+  const targetPath = process.env.targetPath;
+  // const sourcePath="/san测试/第八讲"
+  // const subject = "初中化学";
+  // const sourceDrive = "测试专用公共云盘";
+  // const targetDrive = "测试专用公共云盘";
+  // const targetPath = "/zhangq测试"
 
 
   console.log('科目:', subject);
+  console.log('源目标:', sourceDrive);
   console.log('源文件夹路径:', sourcePath);
   console.log('源路径层级拆分:', sourcePath.split('/'));
+  console.log('目标云盘:', targetDrive);
+  console.log('目标文件夹路径:', targetPath);
+  console.log('目标文件夹层级拆分:', targetPath.split('/'));
+  
 
   await page.goto('https://ijiaoyan.aixuexi.com/workbench.html#/');
   await page.getByRole('combobox').locator('span').nth(1).click();
@@ -28,6 +33,7 @@ test('复制文件夹-保存发布-生产完成', async ({ loggedInPage: page })
 
   const folder_levels = sourcePath.split('/').filter(level => level.trim() !== '');
   const total_levels = folder_levels.length;
+  console.log('源路径拆分后数量:', total_levels);
   for (const [index, folderName] of folder_levels.entries()) {
     console.log(`正在处理第 ${index + 1} 层文件夹：${folderName}`);
     if (index < total_levels - 1) {
@@ -48,10 +54,10 @@ test('复制文件夹-保存发布-生产完成', async ({ loggedInPage: page })
 
   await page.getByRole('button', { name: '复制到' }).click();
   await page.getByLabel('复制到').getByText(targetDrive).click();
-  // await page.getByRole('dialog', { name: '复制到' }).locator('svg').first().click();
   await page.waitForTimeout(2000);
   await page.locator('div.folder-tree >> ul >> li >> span >> i >> svg').first().click();
 
+  
   const target_path_folder_levels = targetPath.split('/').filter(level => level.trim() !== '');
   const target_path_total_levels = target_path_folder_levels.length;
   for (const [index, folderName] of target_path_folder_levels.entries()) {
@@ -73,6 +79,26 @@ test('复制文件夹-保存发布-生产完成', async ({ loggedInPage: page })
 
   await page.getByRole('button', { name: '确 定' }).click();
   await page.waitForTimeout(3000);
+
+  //去复制好的目标文件夹给每个文件点击 生产完成
+  await page.locator('div.ant-layout-sider-children > ul > li > div').getByText(targetDrive, { exact: true }).click();
+  for (const [index, folderName] of target_path_folder_levels.entries()) {
+    console.log(`进入复制完整的文件夹开始准备点击 生产完成，正在处理第 ${index + 1} 层文件夹：${folderName}`);
+    if (index < target_path_total_levels - 1) {
+      // 非最后一层 - 点击进入文件夹
+      console.log(`进入文件夹: ${folderName}`);
+      await page.getByText(folderName,{ exact: true }).click();
+    } else {
+      // 最后一层
+      console.log(`选中文件夹: ${folderName}`);
+
+      const exactTextElement = page.getByText(folderName, { exact: true });
+      await exactTextElement.click();
+      await page.waitForTimeout(2000);
+    }
+  }
+
+
   const target_row_one = page.locator(
             `tbody tr`  
         ).first();
@@ -85,7 +111,7 @@ test('复制文件夹-保存发布-生产完成', async ({ loggedInPage: page })
   const file_list = page.locator(
             'tbody.ant-table-tbody tr.ant-table-row'  
         );
-  const rows = await page.$$('tbody.ant-table-tbody tr.ant-table-row');
+  // const rows = await page.$$('tbody.ant-table-tbody tr.ant-table-row');
   const count = await file_list.count();
   console.log(`文件总数量: ${count}`);
 
@@ -97,5 +123,10 @@ test('复制文件夹-保存发布-生产完成', async ({ loggedInPage: page })
     await page.locator('tbody').getByRole('menu').getByText('生产完成').click();
     await page.getByRole('button', { name: '生产完成' }).click();
   }
+
+  console.log('ok');
+  await page.evaluate(() => {
+        alert('全部操作执行完成');
+      });
   
 });

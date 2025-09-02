@@ -1,8 +1,6 @@
-// import express, { Request, Response } from 'express';
-// import cors from 'cors';
-// import { exec } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 
 import express from 'express';
 import { exec, spawn } from 'child_process';
@@ -23,6 +21,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// 存储任务状态
+const taskStatus = new Map<string, { completed: boolean; progress?: string }>();
+
 const runTestScript = (scriptName, env, res, scripts, index) => {
   const cmdArgs = [
     'playwright', 'test', 
@@ -33,15 +34,28 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
 
   console.log(`即将执行第${index + 1}个命令:`, cmdArgs.join(' '));
 
+  logToFile(`执行命令: ${cmdArgs.join(' ')}`);
+
+  const taskId = uuidv4();
+  taskStatus.set(taskId, { completed: false });
   const child = spawn('npx', cmdArgs, { env });
 
-  child.stdout.on('data', (data) => {
-    console.log(`[Playwright 输出] ${data}`);
-  });
+  child.stdout?.on('data', (data) => {
+        const dataStr = data.toString();
+        console.log(`脚本输出: ${dataStr}`);
+        logToFile(`脚本输出: ${dataStr}`);
+        // 更新任务进度
+        if (taskStatus.has(taskId)) {
+            taskStatus.set(taskId, {
+                completed: false,
+                progress: dataStr.trim().slice(-100) // 保存最后100个字符作为进度
+            });
+        }
+    });
 
-  child.stderr.on('data', (data) => {
-    console.error(`[Playwright 错误] ${data}`);
-  });
+  child.stderr?.on('data', (data) => {
+        console.error(`脚本错误: ${data}`);
+    });
 
   child.on('close', (code) => {
     if (code !== 0) {
@@ -57,7 +71,6 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
     if (index < scripts.length - 1) {
       runTestScript(scripts[index + 1], env, res, scripts, index + 1);
     } else {
-      // 所有脚本执行完成
       res.json({ message: '所有脚本执行成功！' });
     }
   });
@@ -86,6 +99,8 @@ const logToFile = (message: string) => {
 // 执行复制操作的端点
 app.post('/api/copy-folder', (req, res) => {
   try {
+    
+    
     const copyOptions = req.body.copyOptions;
     console.log(`data: ${copyOptions}`);
 
@@ -96,12 +111,8 @@ app.post('/api/copy-folder', (req, res) => {
     const targetPath= copyOptions.targetPath;
 
 
-    // const { resourceTypes, questionTypes, courseName, presetCourse,presetCourseText } = req.body;
     const scriptsToRun = [];
     scriptsToRun.push('copy_file.spec.ts');
-    // const processedQuestionTypes = Array.isArray(questionTypes)
-    //     ? JSON.stringify(questionTypes)
-    //     : questionTypes ? JSON.stringify([questionTypes]) : '[]';
 
     const env = {
         ...process.env,
@@ -114,7 +125,6 @@ app.post('/api/copy-folder', (req, res) => {
 
     runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
 
-    
     // 记录操作日志
     logToFile(`开始复制操作: 
       学科: ${copyOptions.subject},
