@@ -1,9 +1,16 @@
 {
-  "name": "ijiaoyan-automation",
+  "name": "aixuexi-automation",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "ts-node index.ts",
+    "playwright:install": "playwright install",
+    "playwright:test": "playwright test",
+    "playwright:show-report": "playwright show-report"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
