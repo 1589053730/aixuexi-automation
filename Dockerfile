@@ -1,30 +1,35 @@
-# 使用Playwright官方镜像，它已经预装了所有需要的浏览器和Node.js环境
-FROM mcr.microsoft.com/playwright:node-20.12.2-jammy
+# 使用 Playwright 官方镜像作为基础镜像，它已经包含了 Node.js、Playwright 及其浏览器依赖
+FROM mcr.microsoft.com/playwright:v1.55.0
 
 # 设置工作目录
 WORKDIR /app
 
-# 复制package.json和package-lock.json（如果存在）
-COPY package*.json ./
+# 将项目文件复制到容器中
+COPY package.json package-lock.json* ./
+# COPY tools/ ./tools/
+# COPY tools/ui /app/tools/ui
+COPY tools/ ./tools/
+COPY playwright.config.ts ./
+COPY tests/ ./tests/
+COPY fixtures/ ./fixtures/
 
-# 安装项目依赖
-RUN npm install
-
-# 复制TypeScript配置文件
+# 假设你的 tsconfig.json 和其他必要的源文件也需要复制
 COPY tsconfig.json ./
 
-# 复制源代码
-COPY . .
+# 安装项目依赖（包括 TypeScript）
+RUN npm install
 
-# 安装Playwright浏览器（虽然镜像已包含，但确保版本匹配）
-RUN npx playwright install --with-deps
+# 将你的 Node.js 代码编译成 JavaScript（如果需要）
+RUN npx tsc --build
 
-# 编译TypeScript代码
-RUN npm run build || echo "If no build script, we'll handle it differently"
+# 暴露应用程序运行的端口
+EXPOSE 3001
 
-# 暴露应用程序端口（如果你的Express应用需要）
-EXPOSE 3000
 
-# 默认命令：启动应用程序（根据你的实际需求修改）
-# 如果没有特定的启动命令，可以保留为bash以便交互式使用
-CMD ["/bin/bash"]
+
+# 设置环境变量（如果需要）
+# ENV NODE_ENV=production
+
+# 启动命令，使用 node 运行编译后的 JavaScript 文件，或者直接使用 ts-node
+# 请根据你的实际启动文件路径修改
+CMD ["npx", "ts-node", "tools/server/copy_server.ts"]

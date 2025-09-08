@@ -7,9 +7,12 @@ type CustomFixtures = {
 export const test = baseTest.extend<CustomFixtures>({
   loggedInPage: async ({ page }, use) => {
 
-    await page.goto('https://admin.aixuexi.com/#/home');
-    await page.getByRole('textbox', { name: '请输入邮箱账号' }).fill('jt002@qq.com');
-    await page.getByRole('textbox', { name: '请输入OA密码' }).fill('123456');
+    await page.goto('https://admin.aixuexi.com/#/home', { waitUntil: 'networkidle', timeout: 60000 });
+    console.log('填写用户名和密码');
+    // await page.getByRole('textbox', { name: '请输入邮箱账号' }).fill('jt002@qq.com');
+    // await page.getByRole('textbox', { name: '请输入OA密码' }).fill('123456');
+    await page.getByRole('textbox', { name: '请输入邮箱账号' }).fill('tester001@qq.com');
+    await page.getByRole('textbox', { name: '请输入OA密码' }).fill('tk66666666');
     await page.getByRole('link', { name: '登 录' }).click();
     await page.waitForURL('https://admin.aixuexi.com/#/home');
     

@@ -1,8 +1,15 @@
-import { test, expect } from '../../fixtures/loginf.fixture';
+// 在你的 test 文件或启动脚本的最顶部添加
+import dns from 'dns';
+// 设置Node.js不进行DNS缓存，始终重新查询
+dns.setDefaultResultOrder('verbatim');
 
-test('选择文件夹--复制文件夹--生产完成', async ({ loggedInPage: page }) => {
+// import { test, expect } from '../../fixtures/loginf.fixture';
+import { test, expect } from '@playwright/test';
 
-  test.setTimeout(1800000);
+// test('选择文件夹--复制文件夹--生产完成', async ({ loggedInPage: page }) => {
+test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
+
+  test.setTimeout(300000);
 
   const subject = process.env.subject;
   const sourceDrive = process.env.sourceDrive;
@@ -23,13 +30,39 @@ test('选择文件夹--复制文件夹--生产完成', async ({ loggedInPage: pa
   console.log('目标云盘:', targetDrive);
   console.log('目标文件夹路径:', targetPath);
   console.log('目标文件夹层级拆分:', targetPath.split('/'));
-  
 
-  await page.goto('https://ijiaoyan.aixuexi.com/workbench.html#/');
+  await page.goto('https://admin.aixuexi.com/#/home', { waitUntil: 'networkidle', timeout: 60000 });
+  console.log('填写用户名和密码');
+  await page.getByRole('textbox', { name: '请输入邮箱账号' }).fill('jt002@qq.com');
+  await page.getByRole('textbox', { name: '请输入OA密码' }).fill('123456');
+  // await page.getByRole('textbox', { name: '请输入邮箱账号' }).fill('tester001@qq.com');
+  // await page.getByRole('textbox', { name: '请输入OA密码' }).fill('tk66666666');
+  await page.screenshot({ path: '0.png' });
+  await page.getByRole('link', { name: '登 录' }).click();
+  console.log('登录点击完成');
+  await page.screenshot({ path: '1.png' });
+  // await page.waitForURL('https://admin.aixuexi.com/#/home');
+  await page.screenshot({ path: '2.png' });
+  
+  // await page.goto('https://ijiaoyan.aixuexi.com/workbench.html#/');
+  await page.goto('https://ijiaoyan.aixuexi.com/workbench.html#/', {
+    waitUntil: 'networkidle', // 等待网络空闲（无网络请求）
+    timeout: 20000 
+  });
+  // await page.waitForTimeout(3000);
+  await page.screenshot({ path: 'debug1.png' });
   await page.getByRole('combobox').locator('span').nth(1).click();
+  await page.screenshot({ path: 'debug2.png' });
   await page.getByRole('option', { name: subject }).click();
+  console.log('切换学科完成');
+  // await page.waitForTimeout(3000);
+  await page.waitForLoadState('networkidle');
+  await page.waitForSelector('text=生产中心', { timeout: 10000 });
   await page.getByText('生产中心').click();
+  // await page.screenshot({ path: 'debug4.png' });
   await page.getByText(sourceDrive).click();
+  await page.waitForTimeout(3000);
+  await page.screenshot({ path: 'debug3.png' });
 
   const folder_levels = sourcePath.split('/').filter(level => level.trim() !== '');
   const total_levels = folder_levels.length;
@@ -47,6 +80,7 @@ test('选择文件夹--复制文件夹--生产完成', async ({ loggedInPage: pa
       const exactTextElement = page.getByText(folderName, { exact: true });
       // 2. 向上找到它的父级 tr去点击复选框
       const target_row = exactTextElement.locator('..').locator('..').locator('..').locator('..').locator('..').first(); 
+      await page.screenshot({ path: 'debug5.png' });
       await target_row.locator('input.ant-checkbox-input').click(); 
     }
 
@@ -82,6 +116,7 @@ test('选择文件夹--复制文件夹--生产完成', async ({ loggedInPage: pa
 
   //去复制好的目标文件夹给每个文件点击 生产完成
   await page.locator('div.ant-layout-sider-children > ul > li > div').getByText(targetDrive, { exact: true }).click();
+  await page.waitForTimeout(2000);
   for (const [index, folderName] of target_path_folder_levels.entries()) {
     console.log(`进入复制完整的文件夹开始准备点击 生产完成，正在处理第 ${index + 1} 层文件夹：${folderName}`);
     if (index < target_path_total_levels - 1) {
@@ -90,11 +125,10 @@ test('选择文件夹--复制文件夹--生产完成', async ({ loggedInPage: pa
       await page.getByText(folderName,{ exact: true }).click();
     } else {
       // 最后一层
-      console.log(`选中文件夹: ${folderName}`);
-
       const exactTextElement = page.getByText(folderName, { exact: true });
       await exactTextElement.click();
-      await page.waitForTimeout(2000);
+      console.log(`进入文件夹: ${folderName}`);
+      await page.waitForTimeout(3000);
     }
   }
 
@@ -122,9 +156,10 @@ test('选择文件夹--复制文件夹--生产完成', async ({ loggedInPage: pa
     await iconMore.click();
     await page.locator('tbody').getByRole('menu').getByText('生产完成').click();
     await page.getByRole('button', { name: '生产完成' }).click();
+    console.log('第' +i +"文件 生产完成");
   }
 
-  console.log('ok');
+  console.log('完成全部文件点击 生产完成');
   await page.evaluate(() => {
         alert('全部操作执行完成');
       });

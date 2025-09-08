@@ -225,24 +225,6 @@
         return;
       }
       showNotification(`正在浏览 ${getDriveName(sourceDrive.value)}...`, 'info');
-      
-      // 模拟加载文件夹内容
-      setTimeout(() => {
-        const previewContent = `
-          <div class="flex items-center"><i class="fa fa-folder text-warning mr-2"></i> 文档资料</div>
-          <div class="flex items-center ml-4"><i class="fa fa-file-word-o text-primary mr-2"></i> 项目计划.docx</div>
-          <div class="flex items-center ml-4"><i class="fa fa-file-excel-o text-success mr-2"></i> 数据统计.xlsx</div>
-          <div class="flex items-center"><i class="fa fa-folder text-warning mr-2"></i> 图片资源</div>
-          <div class="flex items-center ml-4"><i class="fa fa-file-image-o text-danger mr-2"></i> 截图1.png</div>
-          <div class="flex items-center ml-4"><i class="fa fa-file-image-o text-danger mr-2"></i> 截图2.png</div>
-          <div class="flex items-center"><i class="fa fa-file-pdf-o text-danger mr-2"></i> 说明文档.pdf</div>
-        `;
-        if (sourcePreview) sourcePreview.innerHTML = previewContent;
-        
-        if (!sourcePath.value) {
-          sourcePath.value = '/默认路径/示例文件夹';
-        }
-      }, 800);
     });
     
     browseTarget.addEventListener('click', () => {
@@ -251,13 +233,6 @@
         return;
       }
       showNotification(`正在浏览 ${getDriveName(targetDrive.value)}...`, 'info');
-      
-      // 模拟加载文件夹内容
-      setTimeout(() => {
-        if (!targetPath.value) {
-          targetPath.value = '/默认路径/目标文件夹';
-        }
-      }, 800);
     });
     
     // 表单提交处理
@@ -271,11 +246,6 @@
       
       // 显示执行中状态
       document.getElementById('status').textContent = '执行中...';
-
-      // 显示状态区域
-      // statusSection.classList.remove('hidden');
-      // executionLog.innerHTML = '';
-      // updateStatus('开始准备复制操作...', 'info');
       
       // 禁用按钮
       copyButton.disabled = true;
@@ -299,7 +269,7 @@
       
       try {
         // 调用后端API执行复制操作
-        const response = await fetch('http://localhost:3000/api/copy-folder', {
+        const response = await fetch('/api/copy-folder', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -309,24 +279,14 @@
             })
           });
         
-        // 模拟执行过程
-        // simulateCopyProcess(formData);
-        
         const result = await response.json();
-        if (response.success) {
-          // updateStatus('所有复制操作已完成', 'success');
-          // showNotification('文件夹复制成功！', 'success');
-          // addToHistory(formData, 'success');
-          checkStatus(result.taskId);
+        if (result.success) {
+          document.getElementById('status').textContent = '执行完成: ' + result.message;
         } else {
-          // throw new Error(`HTTP错误: ${response.status} ${response.statusText}`);
           document.getElementById('status').textContent = '启动失败: ' + result.message;
 
         }
       } catch (error) {
-        // updateStatus(`复制失败: ${error.message}`, 'error');
-        // showNotification(`复制失败: ${error.message}`, 'error');
-        // addToHistory(formData, 'error');
         document.getElementById('status').textContent = '错误: ' + error.message;
       } finally {
         // 恢复按钮状态
@@ -335,23 +295,6 @@
         cancelButton.classList.add('hidden');
       }
     });
-
-    async function checkStatus(taskId) {
-            try {
-                const response = await fetch(`/check-status?taskId=${taskId}`);
-                const status = await response.json();
-
-                if (status.completed) {
-                    document.getElementById('status').textContent = '执行完成!';
-                    alert('文件复制和生产已完成'); // 弹出完成通知
-                } else {
-                    document.getElementById('status').textContent = `执行中: ${status.progress || ''}`;
-                    setTimeout(() => checkStatus(taskId), 2000); // 每2秒检查一次
-                }
-            } catch (error) {
-                document.getElementById('status').textContent = '检查状态错误: ' + error.message;
-            }
-        }
     
     // 取消按钮事件
     cancelButton.addEventListener('click', () => {
@@ -364,7 +307,7 @@
       }
     });
     
-    // 辅助函数：验证表单 - 新增学科验证
+    // 辅助函数：验证表单 - 学科验证
     function validateForm() {
       if (!subject.value) { 
         showNotification('请选择学科', 'warning');
@@ -454,16 +397,6 @@
           notification.classList.add('bg-primary/10', 'text-primary', 'border', 'border-primary/30');
           notification.innerHTML = `<i class="fa fa-info-circle mr-2"></i> ${message}`;
       }
-      
-      // 显示通知
-      setTimeout(() => {
-        notification.classList.remove('translate-y-20', 'opacity-0');
-      }, 10);
-      
-      // 3秒后隐藏通知
-      setTimeout(() => {
-        notification.classList.add('translate-y-20', 'opacity-0');
-      }, 3000);
     }
     
     // 获取云盘名称
@@ -484,32 +417,6 @@
       return value;
     }
     
-    // 辅助函数：模拟复制过程
-    function simulateCopyProcess(data) {
-      const steps = [
-        `选择的学科: ${getSubjectName(data.subject)}`,  // 显示选中的学科
-        `连接到 ${getDriveName(data.sourceDrive)} 和 ${getDriveName(data.targetDrive)}`,
-        `验证源路径: ${data.sourcePath}`,
-        `验证目标路径: ${data.targetPath}`
-      ];
-      
-      let stepIndex = 0;
-      
-      const interval = setInterval(() => {
-        if (stepIndex < steps.length) {
-          updateStatus(steps[stepIndex], 'info');
-          stepIndex++;
-        } else {
-          clearInterval(interval);
-        }
-      }, 800);
-      
-      // 如果有取消按钮点击，清除定时器
-      cancelButton.onclick = () => {
-        clearInterval(interval);
-      };
-    }
-    
     // 新增辅助函数：获取学科名称
     function getSubjectName(value) {
       const subjectNames = {
@@ -528,36 +435,6 @@
         'junior_biology': '初中生物'
       };
       return subjectNames[value] || value;
-    }
-    
-    // 辅助函数：添加到历史记录
-    function addToHistory(data, status) {
-      const date = new Date().toLocaleString();
-      const statusClass = status === 'success' ? 'text-success' : 'text-danger';
-      const statusIcon = status === 'success' ? 'fa-check-circle' : 'fa-times-circle';
-      
-      const historyItem = document.createElement('div');
-      historyItem.className = 'p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors';
-      historyItem.innerHTML = `
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="font-medium text-sm">${getSubjectName(data.subject)} - 从 ${getDriveName(data.sourceDrive)} 复制到 ${getDriveName(data.targetDrive)}</div>
-            <div class="text-xs text-neutral mt-1">${data.sourcePath} → ${data.targetPath}</div>
-          </div>
-          <div class="flex items-center ${statusClass} text-sm">
-            <i class="fa ${statusIcon} mr-1"></i>
-            ${status === 'success' ? '成功' : '失败'}
-          </div>
-        </div>
-        <div class="text-xs text-neutral mt-2">${date}</div>
-      `;
-      
-      // 如果是第一条记录，先清空"暂无记录"提示
-      if (historyList && historyList.querySelector('.italic')) {
-        historyList.innerHTML = '';
-      }
-      
-      if (historyList) historyList.prepend(historyItem);
     }
   </script>
 </body>

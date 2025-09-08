@@ -4,53 +4,58 @@ import { v4 as uuidv4 } from 'uuid';
 
 import express from 'express';
 import { exec, spawn } from 'child_process';
+import cors from 'cors';
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
+
+
+app.use(cors({
+  origin: [
+    'http://127.0.0.1:3001', 
+    'http://localhost:3001',
+    'http://127.0.0.1:3000'
+  ],
+  methods: ['POST', 'OPTIONS'],  // 允许POST和预检请求
+  allowedHeaders: ['Content-Type'],
+  optionsSuccessStatus: 200      // 兼容旧浏览器
+}));
+
 
 // 中间件配置
 // app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 允许跨域
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST');
+// 3. 显式处理预检请求（针对/api/copy-folder接口）
+app.options('/api/copy-folder', (req, res) => {
+  // 手动设置与CORS配置一致的响应头
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  next();
+  res.sendStatus(200);  // 预检请求成功响应
 });
 
-// 存储任务状态
-const taskStatus = new Map<string, { completed: boolean; progress?: string }>();
 
 const runTestScript = (scriptName, env, res, scripts, index) => {
   const cmdArgs = [
     'playwright', 'test', 
     `tests/ijiaoyan/${scriptName}`,
-    '--headed', 
-    '--project=chromium'
+    // '--headed', 
+    '--project=chromium',
+    '--config=./playwright.config.ts'
   ];
 
   console.log(`即将执行第${index + 1}个命令:`, cmdArgs.join(' '));
 
   logToFile(`执行命令: ${cmdArgs.join(' ')}`);
 
-  const taskId = uuidv4();
-  taskStatus.set(taskId, { completed: false });
   const child = spawn('npx', cmdArgs, { env });
 
   child.stdout?.on('data', (data) => {
         const dataStr = data.toString();
         console.log(`脚本输出: ${dataStr}`);
         logToFile(`脚本输出: ${dataStr}`);
-        // 更新任务进度
-        if (taskStatus.has(taskId)) {
-            taskStatus.set(taskId, {
-                completed: false,
-                progress: dataStr.trim().slice(-100) // 保存最后100个字符作为进度
-            });
-        }
     });
 
   child.stderr?.on('data', (data) => {
@@ -71,7 +76,10 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
     if (index < scripts.length - 1) {
       runTestScript(scripts[index + 1], env, res, scripts, index + 1);
     } else {
-      res.json({ message: '所有脚本执行成功！' });
+      res.json({
+        success: true,
+        message: '所有脚本执行成功！'
+      });
     }
   });
 };
@@ -155,10 +163,14 @@ app.post('/api/copy-folder', (req, res) => {
 });
 
 // 提供前端静态文件
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/tools/ui', express.static('tools/ui'));
+// app.use('/tools/ui', express.static(path.join(__dirname, '../ui')));
+
+
+
 
 // 启动服务器
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0',() => {
   console.log(`服务器运行在 http://localhost:${PORT}`);
   logToFile(`服务器启动，监听端口 ${PORT}`);
 });
