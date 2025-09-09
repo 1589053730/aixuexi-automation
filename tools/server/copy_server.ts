@@ -41,7 +41,7 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
   const cmdArgs = [
     'playwright', 'test', 
     `tests/ijiaoyan/${scriptName}`,
-    // '--headed', 
+    '--headed', 
     '--project=chromium',
     '--config=./playwright.config.ts'
   ];
@@ -117,6 +117,7 @@ app.post('/api/copy-folder', (req, res) => {
     const sourcePath= copyOptions.sourcePath;
     const targetDrive= copyOptions.targetDrive;
     const targetPath= copyOptions.targetPath;
+    const copyCount= copyOptions.copyCount;
 
 
     const scriptsToRun = [];
@@ -131,7 +132,28 @@ app.post('/api/copy-folder', (req, res) => {
         targetPath: targetPath || ''
     };
 
-    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+
+    // 发送102 Processing状态保持连接
+    res.writeHead(102, { 'Content-Type': 'application/json' });
+    res.write(JSON.stringify({ status: 'processing', message: '任务开始执行' }));
+    
+    // 定期发送状态更新（每20秒）
+    const keepAliveInterval = setInterval(() => {
+      res.write(JSON.stringify({ status: 'processing', message: '任务执行中...' }));
+    }, 20000);
+
+    // 修改runTestScript的回调
+    const originalCallback = (result) => {
+      clearInterval(keepAliveInterval);
+      if (result.success) {
+        res.end(JSON.stringify(result));
+      } else {
+        res.status(500).end(JSON.stringify(result));
+      }
+    };
+    
+    // runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+    runTestScript(scriptsToRun[0], env, { ...res, end: originalCallback }, scriptsToRun, 0);
 
     // 记录操作日志
     logToFile(`开始复制操作: 
@@ -169,8 +191,14 @@ app.use('/tools/ui', express.static('tools/ui'));
 
 
 
+
+// app.listen(PORT, '0.0.0.0',() => {
+//   console.log(`服务器运行在 http://localhost:${PORT}`);
+//   logToFile(`服务器启动，监听端口 ${PORT}`);
+// });
 // 启动服务器
-app.listen(PORT, '0.0.0.0',() => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`服务器运行在 http://localhost:${PORT}`);
   logToFile(`服务器启动，监听端口 ${PORT}`);
 });
+server.setTimeout(300000); // 设置为 5 分钟

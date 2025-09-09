@@ -95,6 +95,7 @@
           </div>
         </div>
         
+        
         <!-- 源路径选择 -->
         <div class="space-y-4">
           <h2 class="text-xl font-semibold text-dark flex items-center">
@@ -164,6 +165,40 @@
             </div>
           </div>
         </div>
+
+        <div class="space-y-4 pt-4 border-t border-gray-100">
+          <h2 class="text-xl font-semibold text-dark flex items-center">
+            <i class="fa fa-sliders text-primary mr-2"></i>
+            复制参数设置
+          </h2>
+          
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">复制讲次数量</label>
+              <div class="relative">
+                <input type="number" id="copyCount" name="copyCount" min="1" value="1" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                  <i class="fa fa-hashtag text-xs"></i>
+                </div>
+              </div>
+              <p class="text-xs text-neutral">输入需要复制的文件夹数量，至少为1</p>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">绑定课程库</label>
+              <div class="relative">
+                <input type="text" id="courseLibrary" name="courseLibrary" placeholder="例如: 秋季学期课程库" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                  <i class="fa fa-bookmark-o text-xs"></i>
+                </div>
+              </div>
+              <p class="text-xs text-neutral">输入要绑定的课程库名称</p>
+            </div>
+          </div>
+        </div>
+
         
         <!-- 执行按钮 -->
         <div class="flex justify-center pt-4 border-t border-gray-100">
@@ -217,6 +252,8 @@
     const cancelButton = document.getElementById('cancelButton');
     const notification = document.getElementById('notification');
     const historyList = document.getElementById('historyList');
+    const copyCount = document.getElementById('copyCount');
+    const courseLibrary = document.getElementById('courseLibrary');
     
     // 模拟文件夹浏览功能
     browseSource.addEventListener('click', () => {
@@ -254,7 +291,9 @@
       
       // 准备数据 - 包含学科信息
       const formData = {
-        subject: subject.value,  // 新增学科数据
+        subject: subject.value, 
+        copyCount: parseInt(copyCount.value), 
+        courseLibrary: courseLibrary.value,
         sourceDrive: sourceDrive.value,
         sourcePath: sourcePath.value,
         targetDrive: targetDrive.value,
@@ -268,26 +307,65 @@
       };
       
       try {
-        // 调用后端API执行复制操作
-        const response = await fetch('/api/copy-folder', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              copyOptions: formData 
-            })
-          });
-        
-        const result = await response.json();
-        if (result.success) {
-          document.getElementById('status').textContent = '执行完成: ' + result.message;
-        } else {
-          document.getElementById('status').textContent = '启动失败: ' + result.message;
+        const controller = new AbortController();
+        //设置5分钟超时
+        const timeoutId = setTimeout(() => controller.abort(), 300000);
 
+        // 1. 启动异步任务，获取任务ID
+        const startResponse = await fetch('/api/copy-folder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({copyOptions: formData }),
+            signal: controller.signal
+          });
+
+        clearTimeout(timeoutId); // 清除超时定时器
+
+        if (!startResponse.ok) {
+          if (startResponse.status === 504) {
+            showNotification('服务器处理超时，请稍后重试', 'error');
+          } else {
+            showNotification(`请求失败: ${startResponse.statusText}`, 'error');
+          }
+          return;
         }
+        
+        const { taskId, success } = await startResponse.json();
+        if (!success) {
+          showNotification('任务启动失败', 'error');
+          return;
+        } 
+
+        // 2. 轮询任务状态（每5秒一次）
+        const pollInterval = setInterval(async () => {
+          const statusResponse = await fetch(`/api/task-status?taskId=${taskId}`);
+          const { status, message } = await statusResponse.json();
+          
+          if (status === 'completed') {
+            clearInterval(pollInterval);
+            document.getElementById('status').textContent = '执行完成: ' + message;
+          } else if (status === 'failed') {
+            clearInterval(pollInterval);
+            document.getElementById('status').textContent = '执行失败: ' + message;
+          } else {
+            document.getElementById('status').textContent = '执行中...' + message; // 显示进度
+          }
+        }, 5000);
+        
+        // const result = await response.json();
+        // if (result.success) {
+        //   document.getElementById('status').textContent = '执行完成: ' + result.message;
+        // } else {
+        //   document.getElementById('status').textContent = '启动失败: ' + result.message;
+
+        // }
       } catch (error) {
-        document.getElementById('status').textContent = '错误: ' + error.message;
+        // document.getElementById('status').textContent = '错误: ' + error.message;
+        if (error.name === 'AbortError') {
+          showNotification('请求超时，请检查网络或尝试更小批量操作', 'error');
+        } else {
+          showNotification('请求失败: ' + error.message, 'error');
+        }
       } finally {
         // 恢复按钮状态
         copyButton.disabled = false;
@@ -311,6 +389,20 @@
     function validateForm() {
       if (!subject.value) { 
         showNotification('请选择学科', 'warning');
+        return false;
+      }
+
+      // 验证复制讲次数量
+      if (!copyCount.value || isNaN(copyCount.value) || parseInt(copyCount.value) < 1) {
+        showNotification('请输入有效的复制讲次数量（至少1）', 'warning');
+        copyCount.focus();
+        return false;
+      }
+
+      // 验证课程库（可以为空，但如果填写了则检查是否有内容）
+      if (courseLibrary.value && !courseLibrary.value.trim()) {
+        showNotification('课程库名称不能只包含空格', 'warning');
+        courseLibrary.focus();
         return false;
       }
       
