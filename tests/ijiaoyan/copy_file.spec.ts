@@ -7,27 +7,27 @@ import { test, expect, Page } from '@playwright/test';
 test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   test.setTimeout(300000);
 
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需+1
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  // const date = new Date();
+  // const year = date.getFullYear();
+  // const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需+1
+  // const day = String(date.getDate()).padStart(2, '0');
+  // const hours = String(date.getHours()).padStart(2, '0');
+  // const minutes = String(date.getMinutes()).padStart(2, '0');
+  // const seconds = String(date.getSeconds()).padStart(2, '0');
 
-  const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
+  // const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
   
   // test.setTimeout(300000 * parseInt(process.env.copyCount || '1', 10)); // 按复制次数调整超时时间
 
-  const subject = process.env.subject;
-  const sourceDrive = process.env.sourceDrive;
-  const sourcePath = process.env.sourcePath;
-  const targetDrive = process.env.targetDrive;
-  const targetPath = process.env.targetPath;
-  const copyCount = parseInt(process.env.copyCount || '1', 10);
-  const courseName = `ui自动化创建-${timestamp}`;
-  const courseLessonCount = parseInt(process.env.courseLessonCount || '1', 10);
-  const courseDrive = process.env.courseDrive;
+  // const subject = process.env.subject;
+  // const sourceDrive = process.env.sourceDrive;
+  // const sourcePath = process.env.sourcePath;
+  // const targetDrive = process.env.targetDrive;
+  // const targetPath = process.env.targetPath;
+  // const copyCount = parseInt(process.env.copyCount || '1', 10);
+  // const courseName = `ui自动化创建-${timestamp}`;
+  // const courseLessonCount = parseInt(process.env.courseLessonCount || '1', 10);
+  // const courseDrive = process.env.courseDrive;
   
 
   // 校验 copyCount 合法性
@@ -35,15 +35,15 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   //   throw new Error(`无效的复制次数 copyCount: ${process.env.copyCount}，必须是大于等于1的整数`);
   // }
 
-  // const sourcePath="/san测试/第二讲"
-  // const subject = "初中化学";
-  // const sourceDrive = "测试专用公共云盘";
-  // const targetDrive = "测试专用公共云盘";
-  // const targetPath = "/zhangq测试";
-  // const copyCount = 2;
-  // const courseName = "ui自动化创建022";
-  // const courseLessonCount = '2';
-  // const courseDrive = "测试专用课程";
+  const sourcePath="/san测试/第十五讲"
+  const subject = "初中化学";
+  const sourceDrive = "测试专用公共云盘";
+  const targetDrive = "测试专用公共云盘";
+  const targetPath = "/zhangq测试";
+  const copyCount = 1;
+  const courseName = "ui自动化创建041";
+  const courseLessonCount = '2';
+  const courseDrive = "测试专用课程";
   
   
   console.log('=== 环境变量配置 ===');
@@ -60,6 +60,17 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   console.log(`课程讲次数量: ${courseDrive}`);
   console.log('====================');
 
+  // 解析源路径层级
+  const folderLevels = sourcePath.split('/').filter(level => level.trim() !== '');
+  const totalLevels = folderLevels.length;
+  const basefolderName = folderLevels[folderLevels.length - 1];
+  console.log('源路径拆分后数量:', totalLevels);
+  console.log('源路径拆分后取最后的文件夹名，即基础文件夹:', basefolderName);
+
+  // 解析目标路径层级
+  const targetPathLevels = targetPath.split('/').filter(level => level.trim() !== '');
+  const targetTotalLevels = targetPathLevels.length;
+
   // 登录流程（只执行一次）
   await page.goto('https://admin.aixuexi.com/#/home', { waitUntil: 'networkidle', timeout: 60000 });
   console.log('填写用户名和密码');
@@ -68,10 +79,12 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   await page.screenshot({ path: 'screenshots/0.png' });
   await page.getByRole('link', { name: '登 录' }).click();
   console.log('登录点击完成');
+
+  await page.waitForTimeout(3000);
   
   await page.goto('https://ijiaoyan.aixuexi.com/workbench.html#/', {
     waitUntil: 'networkidle',
-    timeout: 30000 
+    timeout: 50000 
   });
   await page.screenshot({ path: 'screenshots/debug1.png' });
   await page.getByRole('combobox').locator('span').nth(1).click();
@@ -99,9 +112,67 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   await page.locator('#years').getByText('请选择').click();
   await page.getByRole('option', { name: '2025' }).click();
   await page.getByRole('spinbutton', { name: '* 讲次' }).click();
-  await page.getByRole('spinbutton', { name: '* 讲次' }).fill(courseLessonCount);
+  await page.getByRole('spinbutton', { name: '* 讲次' }).fill(courseLessonCount.toString());
   await page.getByRole('button', { name: '确 定' }).click();
+
+  //第一次先绑定最原始的讲次
+  //点击左侧导航 ”线下配件-课堂落实“
+  //只有第一次会显示【绑定配件】，退出再次进去都不显示这个按钮
+  await page.getByRole('button', { name: '绑定配件' }).click();
+  await page.locator('div.ant-layout-sider-children > ul > li > ul > li').getByText('课堂落实').click();
+  const liElements = page.locator('li.ant-menu-item.ant-menu-item.auto-height');
+  const targetLi = liElements.nth(0);
+  const targetDiv = targetLi.locator('div.card-body.fixed-height');
+  await targetDiv.click();
+
+  await page.locator('div.right > div >div >div.filter-bar ').getByText('课堂落实').click();
+
+  for (const [index, folderName] of folderLevels.entries()) {
+    console.log(`进入源文件夹层级 ${index + 1}：${folderName}`);
+    await page.getByText(folderName, { exact: true }).click();
+
+  }
+
+  console.log('basefolderName：',basefolderName);
+  // await page.getByText(basefolderName, { exact: true }).click();
+
+  // 定义需要切换的所有菜单项（含首次操作的"课堂落实"，统一管理）
+  const menuItems = [
+    "课堂落实", 
+    "自我巩固",
+    "答案册",
+    "笔记本",
+    "期中考试",
+    "期末考试",
+    "精选精炼",
+    "课程资料",
+    "课堂全解读",
+    "教师版作业",
+    "教师教材",
+    "教师版专属题",
+    "教师版进门考"
+  ];
+
+  const bindButton = page.getByRole('button', { name: '绑 定' });
+
+  const initialIsVisible = await bindButton.isVisible().catch(() => false);
+  if (initialIsVisible) {
+    await bindButton.click();
+    await page.waitForTimeout(500);
+    console.log(`✅ 选中文件夹【${basefolderName}】后，首次检查到绑定按钮，已执行点击`);
+  } else {
+    console.log(`❌ 选中文件夹【${basefolderName}】后，首次检查未发现绑定按钮，跳过点击`);
+  }
+
+  // 循环处理所有菜单项（调用封装函数，消除重复代码）
+  for (const menuItem of menuItems) {
+    await handleMenuItemBind(page, menuItem, basefolderName,0);
+  }
+
+  await page.getByRole('button', { name: '保存预览' }).click();
   await page.getByRole('button', { name: '返回' }).click();
+
+  // await page.getByRole('button', { name: '返回' }).click();
 
   // 2. 切换到生产中心开始走复制流程
   await page.waitForSelector('text=生产中心', { timeout: 10000 });
@@ -109,16 +180,7 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   await page.getByText(sourceDrive).click();
   await page.waitForTimeout(3000);
   await page.screenshot({ path: 'screenshots/debug3.png' });
-
-  // 解析源路径层级
-  const folderLevels = sourcePath.split('/').filter(level => level.trim() !== '');
-  const totalLevels = folderLevels.length;
-  console.log('源路径拆分后数量:', totalLevels);
-
-  // 解析目标路径层级
-  const targetPathLevels = targetPath.split('/').filter(level => level.trim() !== '');
-  const targetTotalLevels = targetPathLevels.length;
-
+  
   // 根据复制次数循环执行操作
   for (let copyIndex = 0; copyIndex < copyCount; copyIndex++) {
     console.log(`===== 开始第 ${copyIndex + 1}/${copyCount} 次复制操作 =====`);
@@ -151,7 +213,7 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
         console.log(`选中文件夹: ${folderName}`);
         const exactTextElement = page.getByText(folderName, { exact: true });
         const targetRow = exactTextElement.locator('..').locator('..').locator('..').locator('..').locator('..').first();
-        await page.screenshot({ path: `screenshots/debug_copy_${copyIndex + 1}_select.png` });
+        // await page.screenshot({ path: `screenshots/debug_copy_${copyIndex + 1}_select.png` });
         await targetRow.locator('input.ant-checkbox-input').click();
         await page.waitForTimeout(1000);
       }
@@ -201,22 +263,17 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
 
     //修改复制后的文件夹名字
     const targetRowOne = page.locator('tbody tr').first();
-    const folderNameText = targetRowOne.locator('td:nth-child(3)').textContent();
-    // const folderNameUpdate = (await folderNameText).split('-')[0]${timestamp};
+    const folderNameText = targetRowOne.locator('td:nth-child(3) >div>div>div>span').first().textContent();
     const prefix = (await folderNameText).includes('-') 
       ? (await folderNameText).split('-')[0] 
       : folderNameText; 
     const folderNameUpdate = `${prefix}${timestamp}`;
- 
 
-    // const row = page.locator('tbody.ant-table-tbody tr.ant-table-row').nth(i);
     const updateSvg = targetRowOne.locator('td:nth-child(4) >> .list-operation >> span:nth-child(1) >> i >> svg');
     await targetRowOne.hover();
     await updateSvg.click();
     await page.getByRole('textbox', { name: '*' }).fill(folderNameUpdate);
     await page.getByRole('button', { name: '确 定' }).click();
-
-    // await page.locator('tbody').getByRole('menu').getByText('生产完成').click();
 
     // 进入复制后的文件夹
     await targetRowOne.locator('td:nth-child(3)').click();
@@ -248,33 +305,23 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
     await page.getByText(courseName).click();
     //点击左侧导航 ”线下配件-课堂落实“
     await page.locator('div.ant-layout-sider-children > ul > li > ul > li').getByText('课堂落实').click();
-    // await page.getByRole('menuitem', { name: '课堂落实' }).click();
-    // await page.getByText(courseName).click();
 
     const liElements = page.locator('li.ant-menu-item.ant-menu-item.auto-height');
     console.log('copyIndex',copyIndex);
-    const targetLi = liElements.nth(copyIndex);
+    //因为创建课程库时候已经绑定了第一讲，此处是从第二讲开始绑定，所以copyIndex+1
+    const targetLi = liElements.nth(copyIndex+1);
     const targetDiv = targetLi.locator('div.card-body.fixed-height');
     await targetDiv.click();
 
-    // await page.locator('div').filter({ hasText: `${folderNameUpdate}` }).click();
-    // await page.getByRole('menuitem', { name: '课堂落实' }).nth(1).click();
     await page.locator('div.right > div >div >div.filter-bar ').getByText('课堂落实').click();
-    // await page.locator('div').filter({ hasText: /^课堂落实$/ }).click();
-    await page.locator('div.right > div >div >div.filter-bar ').getByText('课堂落实').click();
-    // await page.getByRole('menuitem', { name: '课堂落实' }).nth(1).click();
-    // await page.getByRole('menuitem', { name: '课堂落实' }).nth(1).click();
+    // await page.locator('div.right > div >div >div.filter-bar ').getByText('课堂落实').click();
+
     for (const [index, folderName] of targetPathLevels.entries()) {
       console.log(`进入目标文件夹层级 ${index + 1}：${folderName}`);
       await page.getByText(folderName, { exact: true }).click();
-      // await page.getByRole('menuitem', { name: '课堂落实' }).nth(1).click();
-      // await page.waitForTimeout(2000);
+
     }
 
-    // await page.getByText('zhangq测试').click();
-    // await page.getByTitle('第二讲', { exact: true }).locator('span').click();
-    // await page.locator('div').filter({ hasText: `${folderNameUpdate}` }).click();
-    // await page.locator('div').filter({ hasText: /^课堂落实$/ }).click();
     console.log('folderNameUpdate：',folderNameUpdate);
     await page.getByText(folderNameUpdate, { exact: true }).click();
 
@@ -308,115 +355,9 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
 
     // 循环处理所有菜单项（调用封装函数，消除重复代码）
     for (const menuItem of menuItems) {
-      await handleMenuItemBind(page, menuItem, folderNameUpdate);
+      await handleMenuItemBind(page, menuItem, folderNameUpdate,copyIndex+1);
     }
 
-    // await page.getByText(folderNameUpdate, { exact: true }).click();
-    // const isButtonVisible = await bindButton.isVisible().catch(() => false);
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('button', { name: '绑 定' }).click();
-    // await page.getByRole('menuitem', { name: '自我巩固' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '答案册' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '笔记本' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '期中考试' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '期末考试' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '精选精炼' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '课程资料' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // // await page.getByRole('row', { name: '60939 讲义 测初中化学样式 创建:jt002' }).getByRole('button').click();
-    // await page.getByRole('menuitem', { name: '课堂全解读' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '教师版作业' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '教师教材' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '教师版专属题' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
-    // await page.getByRole('menuitem', { name: '教师版进门考' }).click();
-    // // await page.getByRole('button', { name: '绑 定' }).click();
-    // if (isButtonVisible) {
-    //   console.log('存在绑定按钮，执行点击');
-    //   await bindButton.click();
-    // } else {
-    //   console.log('不存在绑定按钮，跳过点击');
-    // }
     await page.getByRole('button', { name: '保存预览' }).click();
     await page.getByRole('button', { name: '返回' }).click();
     await page.getByText('生产中心').click();
@@ -431,13 +372,12 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
 });
 
 // 2. 封装重复逻辑：切换菜单 + 判断绑定按钮 + 执行点击（复用性更强）
-async function handleMenuItemBind(page: Page, menuItem: string, folderNameUpdate: string) {
-  // 函数内容保持不变
+async function handleMenuItemBind(page: Page, menuItem: string, folderNameUpdate: string, index: number) {
   const bindButton = page.getByRole('button', { name: '绑 定' }).first();
 
   try {
     await page.getByRole('menuitem', { name: menuItem, exact: true }).click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
     console.log(`已切换到菜单项：【${menuItem}】`);
 
     const isButtonVisible = await bindButton.isVisible().catch(() => false);
@@ -446,6 +386,12 @@ async function handleMenuItemBind(page: Page, menuItem: string, folderNameUpdate
       await bindButton.click();
       await page.waitForTimeout(500);
       console.log(`✅ 菜单项【${menuItem}】下存在绑定按钮，已执行点击`);
+      //修改讲次名称
+      await page.locator('div.menu-wrap.false > ul > li> div> div> i> svg').nth(index).click();
+      await page.locator('div.card-item  > div > span').getByRole('textbox').click();
+      await page.locator('div.card-item  > div > span').getByRole('textbox').fill((index+1).toString());
+      await page.locator('div.card-item  > div > span> i> svg').nth(0).click();
+
     } else {
       console.log(`❌ 菜单项【${menuItem}】下不存在绑定按钮，跳过点击`);
     }
