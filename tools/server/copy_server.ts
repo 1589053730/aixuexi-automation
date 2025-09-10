@@ -118,6 +118,9 @@ app.post('/api/copy-folder', (req, res) => {
     const targetDrive= copyOptions.targetDrive;
     const targetPath= copyOptions.targetPath;
     const copyCount= copyOptions.copyCount;
+    const courseLessonCount = copyOptions.courseLessonCount;
+    const courseDrive = copyOptions.courseDrive;
+    
 
 
     const scriptsToRun = [];
@@ -129,7 +132,10 @@ app.post('/api/copy-folder', (req, res) => {
         sourceDrive: sourceDrive || '',
         sourcePath: sourcePath || '',
         targetDrive: targetDrive || '',
-        targetPath: targetPath || ''
+        targetPath: targetPath || '',
+        copyCount: copyCount || '',
+        courseLessonCount: courseLessonCount || '',
+        courseDrive: courseDrive || ''
     };
 
 

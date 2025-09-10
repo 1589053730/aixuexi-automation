@@ -94,6 +94,52 @@
             </div>
           </div>
         </div>
+
+        <div class="space-y-4 pt-4 border-t border-gray-100">
+          <h2 class="text-xl font-semibold text-dark flex items-center">
+            <i class="fa fa-sliders text-primary mr-2"></i>
+            复制参数设置
+          </h2>
+          
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">复制讲次数量</label>
+              <div class="relative">
+                <input type="number" id="copyCount" name="copyCount" min="1" value="1" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                  <i class="fa fa-hashtag text-xs"></i>
+                </div>
+              </div>
+              <p class="text-xs text-neutral">输入需要复制的文件夹数量，至少为1</p>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">绑定课程讲次数量</label>
+              <div class="relative">
+                <input type="text" id="courseLessonCount" name="courseLessonCount" placeholder="例如: 秋季学期课程库" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                  <i class="fa fa-bookmark-o text-xs"></i>
+                </div>
+              </div>
+              <p class="text-xs text-neutral">对应“课程库-新建课程”页面的“讲次”字段</p>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">请选择课程库云盘</label>
+            <div class="relative">
+              <select id="courseDrive" name="courseDrive" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
+                <option value="">选择课程库位置</option>
+                <option value="测试专用公共云盘">测试专用课程</option>
+                <option value="TSM公共云盘">TSM课程</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                <i class="fa fa-chevron-down text-xs"></i>
+              </div>
+            </div>
+          </div>
+        </div>
         
         
         <!-- 源路径选择 -->
@@ -166,38 +212,7 @@
           </div>
         </div>
 
-        <div class="space-y-4 pt-4 border-t border-gray-100">
-          <h2 class="text-xl font-semibold text-dark flex items-center">
-            <i class="fa fa-sliders text-primary mr-2"></i>
-            复制参数设置
-          </h2>
-          
-          <div class="grid md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">复制讲次数量</label>
-              <div class="relative">
-                <input type="number" id="copyCount" name="copyCount" min="1" value="1" 
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
-                <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
-                  <i class="fa fa-hashtag text-xs"></i>
-                </div>
-              </div>
-              <p class="text-xs text-neutral">输入需要复制的文件夹数量，至少为1</p>
-            </div>
-            
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">绑定课程库</label>
-              <div class="relative">
-                <input type="text" id="courseLibrary" name="courseLibrary" placeholder="例如: 秋季学期课程库" 
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
-                <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
-                  <i class="fa fa-bookmark-o text-xs"></i>
-                </div>
-              </div>
-              <p class="text-xs text-neutral">输入要绑定的课程库名称</p>
-            </div>
-          </div>
-        </div>
+        
 
         
         <!-- 执行按钮 -->
@@ -253,7 +268,8 @@
     const notification = document.getElementById('notification');
     const historyList = document.getElementById('historyList');
     const copyCount = document.getElementById('copyCount');
-    const courseLibrary = document.getElementById('courseLibrary');
+    const courseLessonCount = document.getElementById('courseLessonCount');
+    const courseDrive = document.getElementById('courseDrive');
     
     // 模拟文件夹浏览功能
     browseSource.addEventListener('click', () => {
@@ -293,7 +309,8 @@
       const formData = {
         subject: subject.value, 
         copyCount: parseInt(copyCount.value), 
-        courseLibrary: courseLibrary.value,
+        courseLessonCount: courseLessonCount.value,
+        courseDrive: courseDrive.value,
         sourceDrive: sourceDrive.value,
         sourcePath: sourcePath.value,
         targetDrive: targetDrive.value,
