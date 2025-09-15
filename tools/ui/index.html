@@ -6,7 +6,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   
-  <!-- 配置Tailwind自定义主题 -->
   <script>
     tailwind.config = {
       theme: {
@@ -46,7 +45,6 @@
   </style>
 </head>
 <body class="bg-gray-50 font-inter text-dark min-h-screen flex flex-col">
-  <!-- 顶部导航 -->
   <header class="bg-white shadow-sm py-4 px-6 border-b border-gray-100">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2">
@@ -65,23 +63,18 @@
     </div>
   </header>
 
-  <!-- 主内容区 -->
   <main class="flex-grow container mx-auto px-4 py-8 md:py-12">
     <div class="max-w-2xl mx-auto">
-      <!-- 页面标题 -->
       <div class="mb-8 text-center">
         <h2 class="text-[clamp(1.5rem,3vw,2.25rem)] font-bold text-dark mb-2">创建课程资源</h2>
         <p class="text-gray-500">选择资源类型和题型，快速生成定制化生产数据</p>
       </div>
       
-      <!-- 表单卡片 -->
       <div class="bg-white rounded-xl p-6 md:p-8 card-shadow transition-all duration-300 hover:shadow-xl">
         <form id="resourceForm" class="space-y-8">
-          <!-- 新建课程 -->
           <div class="form-group">
             <label for="courseName" class="block text-sm font-medium text-gray-700 mb-2">
               新建课程
-               <!-- <span class="text-red-500">*</span> -->
             </label>
             <div class="relative mb-3">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -106,13 +99,11 @@
             </div>
           </div>
 
-          <!-- 资源类型选择 - 平铺展示 -->
           <div class="form-group">
             <label class="block text-sm font-medium text-gray-700 mb-4">
               资源类型 <span class="text-red-500">*</span>
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- 试卷选项 -->
               <div class="resource-type-card border-2 rounded-xl p-5 cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5" data-type="exam">
                 <div class="flex items-start mb-3">
                   <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-3">
@@ -120,11 +111,9 @@
                   </div>
                   <div>
                     <h3 class="font-medium text-lg">试卷</h3>
-                    <!-- <p class="text-sm text-gray-500">包含各类题型的综合测试卷</p> -->
                   </div>
                 </div>
                 
-                <!-- 试卷题型选择 -->
                 <div class="resource-type-content mt-4 space-y-2 pl-13">
                   <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
                     <input type="checkbox" name="examQuestionType" value="choice" 
@@ -158,7 +147,6 @@
                 </div>
               </div>
               
-              <!-- 讲义选项 -->
               <div class="resource-type-card border-2 rounded-xl p-5 cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5" data-type="handout">
                 <div class="flex items-start mb-3">
                   <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-3">
@@ -166,11 +154,9 @@
                   </div>
                   <div>
                     <h3 class="font-medium text-lg">讲义</h3>
-                    <!-- <p class="text-sm text-gray-500">包含知识点讲解和例题的教学材料</p> -->
                   </div>
                 </div>
                 
-                <!-- 讲义题型选择 -->
                 <div class="resource-type-content mt-4 space-y-2 pl-13">
                   <label class="flex items-center p-2 border border-gray-200 rounded-lg hover:bg-neutral/50 transition-colors cursor-pointer">
                     <input type="checkbox" name="handoutQuestionType" value="choice" 
@@ -208,7 +194,6 @@
             </div>
           </div>
           
-          <!-- 提交按钮 -->
           <button type="button" onclick="submitForm()" 
             class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 btn-hover">
             <i class="fa fa-rocket"></i>
@@ -216,11 +201,9 @@
           </button>
         </form>
         
-        <!-- 结果显示区 -->
         <div id="result" class="mt-6 p-4 rounded-lg hidden transition-all duration-300"></div>
       </div>
       
-      <!-- 信息提示卡片 -->
       <div class="mt-6 bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-start">
         <i class="fa fa-info-circle text-primary mt-0.5 mr-3"></i>
         <div class="text-sm text-gray-600">
@@ -231,7 +214,6 @@
     </div>
   </main>
 
-  <!-- 页脚 -->
   <footer class="bg-white border-t border-gray-100 py-6 px-4">
     <div class="container mx-auto text-center text-sm text-gray-500">
       <p>课程资源创建系统 - 安全可靠的课程资源生成平台</p>
@@ -241,7 +223,6 @@
   <script>
     document.querySelectorAll('.resource-type-card').forEach(card => {
       card.addEventListener('click', function(e) {
-        // 防止点击复选框时触发卡片选择
         if (e.target.type !== 'checkbox') {
           this.classList.toggle('resource-card-active');
         }
@@ -271,16 +252,15 @@
 
       // 1. 获取课程信息
       const courseName = document.getElementById('courseName').value;
-      // const presetCourse = document.querySelector('input[name="presetCourse"]:checked')?.value;
       const resultEl = document.getElementById('result');
 
-      let selectedTypes = [...cardTypes]; // 复制卡片类型
+      let selectedTypes = [...cardTypes]; 
       // 只有当课程名称有值时才添加course类型，为空时不添加
       if (courseName.trim()) { 
         selectedTypes.push('course'); 
       }
 
-      // 去重（防止重复添加）
+      // 去重
       selectedTypes = [...new Set(selectedTypes)];
 
       // 2. 获取选中的预设课程
@@ -317,7 +297,6 @@
       showResult('<i class="fa fa-circle-o-notch fa-spin mr-2"></i> 正在生成资源，请稍候...', 'loading');
 
       try {
-        // 调用接口
         const res = await fetch('http://localhost:3000/run-test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

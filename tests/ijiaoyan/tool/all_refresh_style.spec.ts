@@ -31,7 +31,7 @@ const skippedFileLog = path.resolve(__dirname, 'skipped_three_files.json');
 // 初始化计数器 - 用于统计各类文件处理数量
 const counters = {
   total: 0,
-  totalSkipped: 0, // 所有类型文件的总跳过数
+  totalSkipped: 0, 
   success: {
     '课程资料': 0,
     '日积月累': 0,
@@ -143,7 +143,6 @@ function markFileSkipped(fileType: string, fileName: string) {
   }
 }
 
-// 定义文件类型和对应处理函数的映射
 const fileTypeHandlers = {
   // '课程资料': handleCourseMaterial,
   '日积月累': handleDailyAccumulation,
@@ -152,7 +151,6 @@ const fileTypeHandlers = {
 
 test('课程资料、日积月累、融会贯通 刷新样式', async ({ page }) => {
   
-  // 初始化处理记录
   initProcessedLog();
   initFailedLog(); 
   initSkippedLog();
@@ -182,7 +180,6 @@ test('课程资料、日积月累、融会贯通 刷新样式', async ({ page })
   // 开始遍历文件夹
   await traverseFolders(page, '春季');
 
-  // 所有文件处理完成后输出统计结果
   console.log('\n===== 文件处理统计结果 =====');
   console.log(`总处理文件数: ${counters.total}`);
   console.log(`总跳过文件数: ${counters.totalSkipped}`);
@@ -306,7 +303,7 @@ async function processFilesByType(page, folderPath: string, subFolders: string[]
 
     if (isFileProcessed(fileType, fileName)) {
       counters.skipped[fileType]++;
-      counters.totalSkipped++; // 累加总跳过数
+      counters.totalSkipped++; 
       console.log(`文件【 ${fullPath} 】已处理，跳过。当前${fileType}跳过数: ${counters.skipped[fileType]}, 总跳过数: ${counters.totalSkipped}`);
       markFileSkipped(fileType, fileName);
       continue;
@@ -321,18 +318,16 @@ async function processFilesByType(page, folderPath: string, subFolders: string[]
         counters.success[fileType]++;
         counters.total++;
         // console.log(`当前累计一共处理 : ${counters.total}, 其中 ${fileType} 成功: ${counters.success[fileType]}`);
-        // 原代码中对应的日志输出行修改为：
         console.log(`当前累计一共处理: ${counters.total}, 其中 ${fileType} 成功: ${counters.success[fileType]}, 失败: ${counters.failed[fileType]} (成功+失败=${counters.success[fileType] + counters.failed[fileType]})`);
         
 
     } catch (error) {
         console.error(`处理文件【 ${folderPath} 】失败:`, error);
         if (newPage) {
-          await newPage.close().catch(err => console.error('关闭页面失败:', err)); // 关闭失败的文件页面
+          await newPage.close().catch(err => console.error('关闭页面失败:', err)); 
         }
         // 记录失败并更新计数器
         markFileFailed(fileType, fullPath, error as Error);
-        // 增加页面恢复逻辑
         if (!page.isClosed()) {
             await page.bringToFront().catch(err => console.error('切换到主页面失败:', err));
             await page.waitForTimeout(2000); // 等待2秒再处理下一个文件
@@ -366,7 +361,7 @@ async function handleCourseMaterial(page, fileName: string) {
   
   await newPage.close();
   await page.bringToFront();
-  return newPage; // 返回页面引用
+  return newPage; 
 }
 
 // 日积月累处理逻辑（更换模版、添加标题）
@@ -420,7 +415,6 @@ async function handleDailyAccumulation(page, fileName: string) {
     await newPagePeriodPromise.close().catch(err => console.error(`关闭文件【 ${fileName} 】失败:`, err));
     // 切换回主页面
     await page.bringToFront();
-    // 更新跳过计数器
     counters.skipped['日积月累']++;
     counters.totalSkipped++;
     // 记录跳过日志
@@ -504,7 +498,7 @@ async function handleIntegration(page, fileName: string) {
   await integratePromise.locator('iframe').contentFrame().locator('#root div').filter({ hasText: /^样式库$/ }).locator('svg').click();
   await integratePromise.waitForTimeout(3000);
 
-  //3、替换讲次标题名称为文件名称
+  //4、替换讲次标题名称为文件名称
   const titleSelector = 'div.slb-lesson-name-con.flex > span.flex > div.text-input';
   const titleElementsCount = await integratePromise.locator('iframe').contentFrame().locator(titleSelector).count();
 
@@ -522,7 +516,7 @@ async function handleIntegration(page, fileName: string) {
   await integratePromise.locator('iframe').contentFrame().locator(`[id="${idTitle}"] svg`).nth(1).click();
 
 
-  //2、定位样式icon - 添加订正栏信息
+  //5、定位样式icon - 添加订正栏信息
   const bookSections = integratePromise.locator('iframe').contentFrame().locator('div.book-col-content > div > div.book-section.section-topic');
   const count = await bookSections.count();
   for (let i = 0; i < count; i++) {
@@ -563,7 +557,7 @@ async function goBackToParentFolder(page) {
     console.error("等待面包屑容器失败：", error);
     // 记录错误到失败日志
     markFileFailed('系统操作', '返回上一级文件夹', new Error(`等待面包屑容器失败: ${error.message}`));
-    // 尝试刷新页面后继续（可选的补救措施）
+    // 尝试刷新页面后继续
     await page.reload({ waitUntil: 'networkidle' }).catch(err => 
       console.error("刷新页面失败:", err)
     );
@@ -600,10 +594,8 @@ async function goBackToParentFolder(page) {
         })
     ]);
   }catch (error) {
-    // 捕获后续操作中的错误
     console.error("点击返回上一级失败：", error.message);
     markFileFailed('系统操作', '返回上一级文件夹', new Error(`点击返回失败: ${error.message}`));
-    // 可选：再次尝试刷新页面
     await page.reload({ waitUntil: 'networkidle' }).catch(err => 
       console.error("刷新页面失败:", err)
     );

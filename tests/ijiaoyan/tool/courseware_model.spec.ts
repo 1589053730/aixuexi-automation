@@ -121,7 +121,6 @@ test('在线课件添加小数模版', async ({ page }) => {
   // 初始化处理记录
   initProcessedLog();
   initFailedLog(); 
-//   initProgressLog(); 
   
   test.setTimeout(21600000);//6小时
   await page.goto('https://admin.aixuexi.com/#/login');
@@ -289,7 +288,6 @@ async function processFilesByType(page, folderPath: string, subFolders: string[]
 
         // 记录失败但不中断循环
         markFileFailed(fileType, fullPath, error as Error);
-        // 增加页面恢复逻辑
         if (!page.isClosed()) {
             await page.bringToFront().catch(err => console.error('切换到主页面失败:', err));
             await page.waitForTimeout(2000); // 等待2秒再处理下一个文件
@@ -355,10 +353,7 @@ async function handleCourseware(page, fileName: string, fullPath: string) {
         return modelPage;
   } catch (err) {
         console.error(`等待弹出窗口失败: ${err.message}`);
-        // 即使弹出窗口未出现，也视为处理完成，避免流程中断
-        // 获取当前所有页面
         const pages = page.context().pages();
-        // 过滤出除主页面外的其他页面（新打开的页面）
         const newPages = pages.filter(p => p !== page);
 
         // 关闭所有新打开的页面
@@ -386,7 +381,6 @@ async function handleCourseware(page, fileName: string, fullPath: string) {
   
 }
 
-// 返回上一级文件夹方法保持不变
 async function goBackToParentFolder(page) {
 
   if (page.isClosed()) {
@@ -405,7 +399,6 @@ async function goBackToParentFolder(page) {
     console.error("等待面包屑容器失败：", error);
     // 记录错误到失败日志
     markFileFailed('系统操作', '返回上一级文件夹', new Error(`等待面包屑容器失败: ${error.message}`));
-    // 尝试刷新页面后继续（可选的补救措施）
     await page.reload({ waitUntil: 'networkidle' }).catch(err => 
       console.error("刷新页面失败:", err)
     );
@@ -445,7 +438,6 @@ async function goBackToParentFolder(page) {
     // 捕获后续操作中的错误
     console.error("点击返回上一级失败：", error.message);
     markFileFailed('系统操作', '返回上一级文件夹', new Error(`点击返回失败: ${error.message}`));
-    // 可选：再次尝试刷新页面
     await page.reload({ waitUntil: 'networkidle' }).catch(err => 
       console.error("刷新页面失败:", err)
     );

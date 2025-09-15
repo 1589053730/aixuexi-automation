@@ -16,9 +16,9 @@ app.use(cors({
     'http://localhost:3001',
     'http://127.0.0.1:3000'
   ],
-  methods: ['POST', 'OPTIONS'],  // 允许POST和预检请求
+  methods: ['POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
-  optionsSuccessStatus: 200      // 兼容旧浏览器
+  optionsSuccessStatus: 200 
 }));
 
 
@@ -27,13 +27,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 3. 显式处理预检请求（针对/api/copy-folder接口）
 app.options('/api/copy-folder', (req, res) => {
-  // 手动设置与CORS配置一致的响应头
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.sendStatus(200);  // 预检请求成功响应
+  res.sendStatus(200); 
 });
 
 
@@ -44,7 +42,17 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
     '--headed', 
     '--project=chromium',
     '--config=./playwright.config.ts'
+    // ,
+    // '--debug'
   ];
+
+  // linux
+  // const cmdArgs = [
+  //   'playwright', 'test', 
+  //   `tests/ijiaoyan/${scriptName}`,
+  //   '--project=chromium',
+  //   '--config=./playwright.config.ts'
+  // ];
 
   console.log(`即将执行第${index + 1}个命令:`, cmdArgs.join(' '));
 
@@ -54,7 +62,7 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
 
   child.stdout?.on('data', (data) => {
         const dataStr = data.toString();
-        console.log(`脚本输出: ${dataStr}`);
+        // console.log(`脚本输出: ${dataStr}`);
         logToFile(`脚本输出: ${dataStr}`);
     });
 
@@ -120,9 +128,7 @@ app.post('/api/copy-folder', (req, res) => {
     const copyCount= copyOptions.copyCount;
     const courseLessonCount = copyOptions.courseLessonCount;
     const courseDrive = copyOptions.courseDrive;
-    
-
-
+  
     const scriptsToRun = [];
     scriptsToRun.push('copy_file.spec.ts');
 
@@ -138,37 +144,23 @@ app.post('/api/copy-folder', (req, res) => {
         courseDrive: courseDrive || ''
     };
 
-
-    // 发送102 Processing状态保持连接
-    res.writeHead(102, { 'Content-Type': 'application/json' });
-    res.write(JSON.stringify({ status: 'processing', message: '任务开始执行' }));
-    
-    // 定期发送状态更新（每20秒）
-    const keepAliveInterval = setInterval(() => {
-      res.write(JSON.stringify({ status: 'processing', message: '任务执行中...' }));
-    }, 20000);
-
-    // 修改runTestScript的回调
     const originalCallback = (result) => {
-      clearInterval(keepAliveInterval);
       if (result.success) {
-        res.end(JSON.stringify(result));
+        res.json(result);
       } else {
-        res.status(500).end(JSON.stringify(result));
+        res.status(500).json(result);
       }
     };
     
-    // runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
-    runTestScript(scriptsToRun[0], env, { ...res, end: originalCallback }, scriptsToRun, 0);
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+    // runTestScript(scriptsToRun[0], env, { ...res, end: originalCallback }, scriptsToRun, 0);
 
-    // 记录操作日志
     logToFile(`开始复制操作: 
       学科: ${copyOptions.subject},
       源: ${copyOptions.sourceDrive}${copyOptions.sourcePath},
       目标: ${copyOptions.targetDrive}${copyOptions.targetPath}
     `);
     
-    // 构建传递给自动化脚本的参数
     const params = [
       `--subject="${copyOptions.subject}"`,
       `--source-drive="${copyOptions.sourceDrive}"`,

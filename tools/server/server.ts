@@ -3,7 +3,6 @@ import { exec, spawn } from 'child_process';
 const app = express();
 app.use(express.json());
 
-// 允许跨域
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST');

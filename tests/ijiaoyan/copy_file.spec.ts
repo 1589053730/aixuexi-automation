@@ -2,32 +2,25 @@ import dns from 'dns';
 dns.setDefaultResultOrder('verbatim');
 
 // import { test, expect } from '@playwright/test';
-import { test, expect, Page } from '@playwright/test';
+import { test, Page } from '@playwright/test';
 
 test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
-  test.setTimeout(300000);
+  test.setTimeout(600000);
 
-  // const date = new Date();
-  // const year = date.getFullYear();
-  // const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需+1
-  // const day = String(date.getDate()).padStart(2, '0');
-  // const hours = String(date.getHours()).padStart(2, '0');
-  // const minutes = String(date.getMinutes()).padStart(2, '0');
-  // const seconds = String(date.getSeconds()).padStart(2, '0');
 
-  // const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
+  const timestamp = getTimestamp();
   
   // test.setTimeout(300000 * parseInt(process.env.copyCount || '1', 10)); // 按复制次数调整超时时间
 
-  // const subject = process.env.subject;
-  // const sourceDrive = process.env.sourceDrive;
-  // const sourcePath = process.env.sourcePath;
-  // const targetDrive = process.env.targetDrive;
-  // const targetPath = process.env.targetPath;
-  // const copyCount = parseInt(process.env.copyCount || '1', 10);
-  // const courseName = `ui自动化创建-${timestamp}`;
-  // const courseLessonCount = parseInt(process.env.courseLessonCount || '1', 10);
-  // const courseDrive = process.env.courseDrive;
+  const subject = process.env.subject;
+  const sourceDrive = process.env.sourceDrive;
+  const sourcePath = process.env.sourcePath;
+  const targetDrive = process.env.targetDrive;
+  const targetPath = process.env.targetPath;
+  const copyCount = parseInt(process.env.copyCount || '1', 10);
+  const courseName = `ui自动化创建-${timestamp}`;
+  const courseLessonCount = parseInt(process.env.courseLessonCount || '1', 10);
+  const courseDrive = process.env.courseDrive;
   
 
   // 校验 copyCount 合法性
@@ -35,15 +28,15 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   //   throw new Error(`无效的复制次数 copyCount: ${process.env.copyCount}，必须是大于等于1的整数`);
   // }
 
-  const sourcePath="/san测试/第十五讲"
-  const subject = "初中化学";
-  const sourceDrive = "测试专用公共云盘";
-  const targetDrive = "测试专用公共云盘";
-  const targetPath = "/zhangq测试";
-  const copyCount = 1;
-  const courseName = "ui自动化创建041";
-  const courseLessonCount = '2';
-  const courseDrive = "测试专用课程";
+  // const sourcePath="/san测试/章节结构/4-6"
+  // const subject = "初中数学";
+  // const sourceDrive = "测试专用公共云盘";
+  // const targetDrive = "测试专用公共云盘";
+  // const targetPath = "/san测试/章节结构";
+  // const copyCount = 1;
+  // const courseName = "ui自动化创建05";
+  // const courseLessonCount = '2';
+  // const courseDrive = "测试专用课程";
   
   
   console.log('=== 环境变量配置 ===');
@@ -55,9 +48,9 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   console.log('目标文件夹路径:', targetPath);
   console.log('目标文件夹层级拆分:', targetPath.split('/'));
   console.log('复制讲次数量:', copyCount);
-  console.log(`绑定课程名称: ${courseName}`);
-  console.log(`课程讲次数量: ${courseLessonCount}`);
-  console.log(`课程讲次数量: ${courseDrive}`);
+  console.log('绑定课程名称:', courseName);
+  console.log('课程讲次数量:', courseLessonCount);
+  console.log('课程库课程位置: ',courseDrive);
   console.log('====================');
 
   // 解析源路径层级
@@ -71,12 +64,11 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   const targetPathLevels = targetPath.split('/').filter(level => level.trim() !== '');
   const targetTotalLevels = targetPathLevels.length;
 
-  // 登录流程（只执行一次）
+  // 登录流程
   await page.goto('https://admin.aixuexi.com/#/home', { waitUntil: 'networkidle', timeout: 60000 });
   console.log('填写用户名和密码');
   await page.getByRole('textbox', { name: '请输入邮箱账号' }).fill('jt002@qq.com');
   await page.getByRole('textbox', { name: '请输入OA密码' }).fill('123456');
-  await page.screenshot({ path: 'screenshots/0.png' });
   await page.getByRole('link', { name: '登 录' }).click();
   console.log('登录点击完成');
 
@@ -86,7 +78,7 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
     waitUntil: 'networkidle',
     timeout: 50000 
   });
-  await page.screenshot({ path: 'screenshots/debug1.png' });
+
   await page.getByRole('combobox').locator('span').nth(1).click();
   await page.screenshot({ path: 'screenshots/debug2.png' });
   await page.getByRole('option', { name: subject }).click();
@@ -113,6 +105,12 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   await page.getByRole('option', { name: '2025' }).click();
   await page.getByRole('spinbutton', { name: '* 讲次' }).click();
   await page.getByRole('spinbutton', { name: '* 讲次' }).fill(courseLessonCount.toString());
+
+  const menuItems = await page.locator(
+    'div.ant-checkbox-group > div.ant-row:nth-child(2) > div > div.ant-row > div > label > span:nth-child(2)'
+  ).allTextContents();
+  console.log('menuItems',menuItems);
+
   await page.getByRole('button', { name: '确 定' }).click();
 
   //第一次先绑定最原始的讲次
@@ -128,30 +126,15 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   await page.locator('div.right > div >div >div.filter-bar ').getByText('课堂落实').click();
 
   for (const [index, folderName] of folderLevels.entries()) {
-    console.log(`进入源文件夹层级 ${index + 1}：${folderName}`);
+    console.log('进入源文件夹层级:', `${index + 1}:${folderName}`);
+    await page.screenshot({ path: `tests/ijiaoyan/screenshots/${index}0.png` });
     await page.getByText(folderName, { exact: true }).click();
+    await page.screenshot({ path: `tests/ijiaoyan/screenshots/${index}1.png` });
+    await page.waitForTimeout(5000); 
 
   }
 
   console.log('basefolderName：',basefolderName);
-  // await page.getByText(basefolderName, { exact: true }).click();
-
-  // 定义需要切换的所有菜单项（含首次操作的"课堂落实"，统一管理）
-  const menuItems = [
-    "课堂落实", 
-    "自我巩固",
-    "答案册",
-    "笔记本",
-    "期中考试",
-    "期末考试",
-    "精选精炼",
-    "课程资料",
-    "课堂全解读",
-    "教师版作业",
-    "教师教材",
-    "教师版专属题",
-    "教师版进门考"
-  ];
 
   const bindButton = page.getByRole('button', { name: '绑 定' });
 
@@ -164,15 +147,13 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
     console.log(`❌ 选中文件夹【${basefolderName}】后，首次检查未发现绑定按钮，跳过点击`);
   }
 
-  // 循环处理所有菜单项（调用封装函数，消除重复代码）
+  // 循环处理所有菜单项
   for (const menuItem of menuItems) {
     await handleMenuItemBind(page, menuItem, basefolderName,0);
   }
 
   await page.getByRole('button', { name: '保存预览' }).click();
   await page.getByRole('button', { name: '返回' }).click();
-
-  // await page.getByRole('button', { name: '返回' }).click();
 
   // 2. 切换到生产中心开始走复制流程
   await page.waitForSelector('text=生产中心', { timeout: 10000 });
@@ -185,19 +166,13 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   for (let copyIndex = 0; copyIndex < copyCount; copyIndex++) {
     console.log(`===== 开始第 ${copyIndex + 1}/${copyCount} 次复制操作 =====`);
 
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需+1
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const timestamp = getTimestamp();
 
-    const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
+    
     console.log(timestamp);
 
     // 3. 导航到源文件夹并选中
-    // 先回到源驱动器根目录（避免层级残留）
+    // 先回到源驱动器根目录
     await page.locator('div.ant-layout-sider-children > ul > li > div').getByText(sourceDrive).click();
     await page.waitForTimeout(2000);
 
@@ -213,7 +188,6 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
         console.log(`选中文件夹: ${folderName}`);
         const exactTextElement = page.getByText(folderName, { exact: true });
         const targetRow = exactTextElement.locator('..').locator('..').locator('..').locator('..').locator('..').first();
-        // await page.screenshot({ path: `screenshots/debug_copy_${copyIndex + 1}_select.png` });
         await targetRow.locator('input.ant-checkbox-input').click();
         await page.waitForTimeout(1000);
       }
@@ -267,7 +241,7 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
     const prefix = (await folderNameText).includes('-') 
       ? (await folderNameText).split('-')[0] 
       : folderNameText; 
-    const folderNameUpdate = `${prefix}${timestamp}`;
+    const folderNameUpdate = `${prefix}-${timestamp}`;
 
     const updateSvg = targetRowOne.locator('td:nth-child(4) >> .list-operation >> span:nth-child(1) >> i >> svg');
     await targetRowOne.hover();
@@ -292,11 +266,11 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
       await page.locator('tbody').getByRole('menu').getByText('生产完成').click();
       await page.getByRole('button', { name: '生产完成' }).click();
       console.log(`第 ${copyIndex + 1} 次复制 - 第 ${i + 1}/${count} 个文件已标记生产完成`);
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
     }
 
     console.log(`===== 第 ${copyIndex + 1}/${copyCount} 次操作完成 =====`);
-    await page.waitForTimeout(2000); // 每次操作间隔
+    await page.waitForTimeout(2000); 
 
     
     // 8. 绑定课程配件
@@ -314,33 +288,16 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
     await targetDiv.click();
 
     await page.locator('div.right > div >div >div.filter-bar ').getByText('课堂落实').click();
-    // await page.locator('div.right > div >div >div.filter-bar ').getByText('课堂落实').click();
 
     for (const [index, folderName] of targetPathLevels.entries()) {
       console.log(`进入目标文件夹层级 ${index + 1}：${folderName}`);
       await page.getByText(folderName, { exact: true }).click();
-
+      await page.waitForTimeout(2000); 
     }
 
     console.log('folderNameUpdate：',folderNameUpdate);
     await page.getByText(folderNameUpdate, { exact: true }).click();
-
-    // 1. 定义需要切换的所有菜单项（含首次操作的"课堂落实"，统一管理）
-    const menuItems = [
-      "课堂落实",  // 原代码中首次点击的菜单项，统一纳入数组
-      "自我巩固",
-      "答案册",
-      "笔记本",
-      "期中考试",
-      "期末考试",
-      "精选精炼",
-      "课程资料",
-      "课堂全解读",
-      "教师版作业",
-      "教师教材",
-      "教师版专属题",
-      "教师版进门考"
-    ];
+    await page.waitForTimeout(2000); 
 
     const bindButton = page.getByRole('button', { name: '绑 定' });
 
@@ -353,7 +310,7 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
       console.log(`❌ 选中文件夹【${folderNameUpdate}】后，首次检查未发现绑定按钮，跳过点击`);
     }
 
-    // 循环处理所有菜单项（调用封装函数，消除重复代码）
+    // 循环处理所有菜单项
     for (const menuItem of menuItems) {
       await handleMenuItemBind(page, menuItem, folderNameUpdate,copyIndex+1);
     }
@@ -364,14 +321,13 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
   }
 
   
-
   console.log('全部复制和生产完成操作已执行完毕');
   await page.evaluate(() => {
     alert('全部操作执行完成');
   });
 });
 
-// 2. 封装重复逻辑：切换菜单 + 判断绑定按钮 + 执行点击（复用性更强）
+// 切换菜单 + 判断绑定按钮 + 执行点击
 async function handleMenuItemBind(page: Page, menuItem: string, folderNameUpdate: string, index: number) {
   const bindButton = page.getByRole('button', { name: '绑 定' }).first();
 
@@ -398,4 +354,15 @@ async function handleMenuItemBind(page: Page, menuItem: string, folderNameUpdate
   } catch (error) {
     console.error(`处理菜单项【${menuItem}】时出错：`, error);
   }
+}
+
+function getTimestamp(): string {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需+1
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }

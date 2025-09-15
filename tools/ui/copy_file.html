@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   
-  <!-- 配置Tailwind -->
   <script>
     tailwind.config = {
       theme: {
@@ -53,7 +52,6 @@
 </head>
 <body class="font-inter bg-gray-50 min-h-screen">
   <div class="container mx-auto px-4 py-8 max-w-5xl">
-    <!-- 头部标题 -->
     <header class="mb-8 text-center">
       <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-2 flex items-center justify-center">
         <i class="fa fa-cloud-transfer text-primary mr-3"></i>
@@ -62,10 +60,8 @@
       <p class="text-neutral">1、生产中心复制文件夹   2、课程库绑定课程库</p>
     </header>
 
-    <!-- 主内容区 -->
     <main class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
       <form id="copyForm" class="space-y-8">
-        <!-- 学科选择 -->
         <div class="space-y-4">
           <h2 class="text-xl font-semibold text-dark flex items-center">
             <i class="fa fa-book text-primary mr-2"></i>
@@ -131,8 +127,8 @@
             <div class="relative">
               <select id="courseDrive" name="courseDrive" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
                 <option value="">选择课程库位置</option>
-                <option value="测试专用公共云盘">测试专用课程</option>
-                <option value="TSM公共云盘">TSM课程</option>
+                <option value="测试专用课程">测试专用课程</option>
+                <option value="TSM课程">TSM课程</option>
               </select>
               <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
                 <i class="fa fa-chevron-down text-xs"></i>
@@ -141,8 +137,6 @@
           </div>
         </div>
         
-        
-        <!-- 源路径选择 -->
         <div class="space-y-4">
           <h2 class="text-xl font-semibold text-dark flex items-center">
             <i class="fa fa-folder-open text-primary mr-2"></i>
@@ -177,7 +171,6 @@
           </div>
         </div>
         
-        <!-- 目标路径选择 -->
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <h2 class="text-xl font-semibold text-dark flex items-center">
             <i class="fa fa-folder-open-o text-secondary mr-2"></i>
@@ -211,22 +204,17 @@
             </div>
           </div>
         </div>
-
         
-
-        
-        <!-- 执行按钮 -->
         <div class="flex justify-center pt-4 border-t border-gray-100">
           <button type="submit" id="copyButton" class="bg-primary hover:bg-primary/90 text-white font-medium px-8 py-3 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center">
             <i class="fa fa-copy mr-2"></i>
-            执行文件夹复制
+            执行讲次复制和绑定课程
           </button>
         </div>
         <div id="status"></div>
       </form>
     </main>
     
-    <!-- 执行状态区域 -->
     <div id="statusSection" class="bg-white rounded-xl shadow-lg p-6 mb-8 hidden">
       <h2 class="text-xl font-semibold text-dark mb-4 flex items-center">
         <i class="fa fa-spinner fa-spin mr-2" id="statusIcon"></i>
@@ -244,8 +232,7 @@
       </div>
     </div>
   </div>
-  
-  <!-- 通知组件 -->
+
   <div id="notification" class="fixed bottom-6 right-6 p-4 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 max-w-sm hidden"></div>
 
   <script>
@@ -271,7 +258,6 @@
     const courseLessonCount = document.getElementById('courseLessonCount');
     const courseDrive = document.getElementById('courseDrive');
     
-    // 模拟文件夹浏览功能
     browseSource.addEventListener('click', () => {
       if (!sourceDrive.value) {
         showNotification('请先选择源云盘', 'warning');
@@ -288,7 +274,6 @@
       showNotification(`正在浏览 ${getDriveName(targetDrive.value)}...`, 'info');
     });
     
-    // 表单提交处理
     copyForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -297,15 +282,12 @@
         return;
       }
       
-      // 显示执行中状态
       document.getElementById('status').textContent = '执行中...';
       
-      // 禁用按钮
       copyButton.disabled = true;
       copyButton.classList.add('opacity-70', 'cursor-not-allowed');
       cancelButton.classList.remove('hidden');
       
-      // 准备数据 - 包含学科信息
       const formData = {
         subject: subject.value, 
         copyCount: parseInt(copyCount.value), 
@@ -328,70 +310,33 @@
         //设置5分钟超时
         const timeoutId = setTimeout(() => controller.abort(), 300000);
 
-        // 1. 启动异步任务，获取任务ID
-        const startResponse = await fetch('/api/copy-folder', {
+        const response = await fetch('/api/copy-folder', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({copyOptions: formData }),
             signal: controller.signal
           });
 
-        clearTimeout(timeoutId); // 清除超时定时器
+        clearTimeout(timeoutId); 
 
-        if (!startResponse.ok) {
-          if (startResponse.status === 504) {
-            showNotification('服务器处理超时，请稍后重试', 'error');
-          } else {
-            showNotification(`请求失败: ${startResponse.statusText}`, 'error');
-          }
-          return;
+        if (!response.ok) {
+          throw new Error(`HTTP 错误: ${response.status}`);
         }
-        
-        const { taskId, success } = await startResponse.json();
-        if (!success) {
-          showNotification('任务启动失败', 'error');
-          return;
-        } 
 
-        // 2. 轮询任务状态（每5秒一次）
-        const pollInterval = setInterval(async () => {
-          const statusResponse = await fetch(`/api/task-status?taskId=${taskId}`);
-          const { status, message } = await statusResponse.json();
-          
-          if (status === 'completed') {
-            clearInterval(pollInterval);
-            document.getElementById('status').textContent = '执行完成: ' + message;
-          } else if (status === 'failed') {
-            clearInterval(pollInterval);
-            document.getElementById('status').textContent = '执行失败: ' + message;
-          } else {
-            document.getElementById('status').textContent = '执行中...' + message; // 显示进度
-          }
-        }, 5000);
-        
-        // const result = await response.json();
-        // if (result.success) {
-        //   document.getElementById('status').textContent = '执行完成: ' + result.message;
-        // } else {
-        //   document.getElementById('status').textContent = '启动失败: ' + result.message;
-
-        // }
+        const result = await response.json();
+        document.getElementById('status').textContent = result.success 
+          ? `执行完成: ${result.message}` 
+          : `失败: ${result.message}`;
       } catch (error) {
-        // document.getElementById('status').textContent = '错误: ' + error.message;
-        if (error.name === 'AbortError') {
-          showNotification('请求超时，请检查网络或尝试更小批量操作', 'error');
-        } else {
-          showNotification('请求失败: ' + error.message, 'error');
-        }
+        document.getElementById('status').textContent = '错误: ' + error.message;
       } finally {
-        // 恢复按钮状态
         copyButton.disabled = false;
         copyButton.classList.remove('opacity-70', 'cursor-not-allowed');
-        cancelButton.classList.add('hidden');
+
       }
     });
     
-    // 取消按钮事件
+
     cancelButton.addEventListener('click', () => {
       if (confirm('确定要取消当前复制操作吗？')) {
         updateStatus('操作已被用户取消', 'warning');
@@ -402,24 +347,16 @@
       }
     });
     
-    // 辅助函数：验证表单 - 学科验证
+    // 学科验证
     function validateForm() {
       if (!subject.value) { 
         showNotification('请选择学科', 'warning');
         return false;
       }
 
-      // 验证复制讲次数量
       if (!copyCount.value || isNaN(copyCount.value) || parseInt(copyCount.value) < 1) {
         showNotification('请输入有效的复制讲次数量（至少1）', 'warning');
         copyCount.focus();
-        return false;
-      }
-
-      // 验证课程库（可以为空，但如果填写了则检查是否有内容）
-      if (courseLibrary.value && !courseLibrary.value.trim()) {
-        showNotification('课程库名称不能只包含空格', 'warning');
-        courseLibrary.focus();
         return false;
       }
       
@@ -453,12 +390,10 @@
       return true;
     }
     
-    // 辅助函数：更新状态
     function updateStatus(message, type) {
       statusTitle.textContent = message;
       logToConsole(message);
       
-      // 更新图标
       statusIcon.className = '';
       switch(type) {
         case 'info':
@@ -476,19 +411,16 @@
       }
     }
     
-    // 辅助函数：添加日志
     function logToConsole(message) {
       const timestamp = new Date().toLocaleTimeString();
       executionLog.innerHTML += `[${timestamp}] ${message}\n`;
       executionLog.scrollTop = executionLog.scrollHeight;
     }
     
-    // 辅助函数：显示通知
     function showNotification(message, type = 'info') {
       notification.textContent = message;
       notification.className = 'fixed bottom-6 right-6 p-4 rounded-lg shadow-lg transform transition-all duration-300 max-w-sm flex items-center';
       
-      // 设置通知类型样式
       switch(type) {
         case 'success':
           notification.classList.add('bg-success/10', 'text-success', 'border', 'border-success/30');
@@ -508,7 +440,6 @@
       }
     }
     
-    // 获取云盘名称
     function getDriveName(value) {
       // 找到源云盘下拉列表中值为value的选项
       const sourceOption = Array.from(sourceDrive.options).find(option => option.value === value);
@@ -522,11 +453,10 @@
         return targetOption.text;
       }
       
-      // 如果都没找到，返回原始值
       return value;
     }
     
-    // 新增辅助函数：获取学科名称
+    // 获取学科名称
     function getSubjectName(value) {
       const subjectNames = {
         'junior_chinese': '初中语文',

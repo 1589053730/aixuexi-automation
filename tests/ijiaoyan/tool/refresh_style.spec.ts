@@ -32,7 +32,7 @@ async function traverseFolders(page, folderName: string) {
   await page.waitForFunction(
     () => {
       const tbody = document.querySelector('tbody.ant-table-tbody');
-      return !!tbody; // 只要tbody元素存在就返回true
+      return !!tbody; 
     },
     {},
     { timeout: 5000 }
@@ -93,7 +93,7 @@ async function processFilesInCurrentFolder(page, folderName: string, subFolders:
   await page.getByRole('menuitem', { name: '课程资料', exact: true }).click();
   await page.waitForTimeout(1000);
   
-  // 重新获取筛选后的行（避免缓存旧数据）
+  // 重新获取筛选后的行
   const fileRows = await page.$$('tbody.ant-table-tbody tr.ant-table-row');
   const validFiles: string[] = [];
   
@@ -108,7 +108,7 @@ async function processFilesInCurrentFolder(page, folderName: string, subFolders:
     const fileName = await nameElement.textContent() ?? '';
     const trimmedFileName = fileName.trim();
     
-    // 核心判断：如果讲义名不在子文件夹列表中，才视为有效文件
+    // 如果讲义名不在子文件夹列表中，才视为有效文件
     if (trimmedFileName && !subFolders.includes(trimmedFileName)) {
       validFiles.push(trimmedFileName);
     }
@@ -179,11 +179,10 @@ async function goBackToParentFolder(page) {
       state: 'visible'
     });
 
-    // 6. 执行点击并等待导航完成（修复waitUntil参数）
+    // 6. 执行点击并等待导航完成
     await Promise.all([
       page.waitForNavigation({
         timeout: 20000,
-        // 只使用单个值而不是数组，兼容所有版本
         waitUntil: 'networkidle'
       }),
       parentLinkLocator.click({
