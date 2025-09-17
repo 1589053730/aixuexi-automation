@@ -36,23 +36,23 @@ app.options('/api/copy-folder', (req, res) => {
 
 
 const runTestScript = (scriptName, env, res, scripts, index) => {
-  const cmdArgs = [
-    'playwright', 'test', 
-    `tests/ijiaoyan/${scriptName}`,
-    '--headed', 
-    '--project=chromium',
-    '--config=./playwright.config.ts'
-    // ,
-    // '--debug'
-  ];
-
-  // linux
   // const cmdArgs = [
   //   'playwright', 'test', 
   //   `tests/ijiaoyan/${scriptName}`,
+  //   '--headed', 
   //   '--project=chromium',
   //   '--config=./playwright.config.ts'
+  //   // ,
+  //   // '--debug'
   // ];
+
+  // linux
+  const cmdArgs = [
+    'playwright', 'test', 
+    `tests/ijiaoyan/${scriptName}`,
+    '--project=chromium',
+    '--config=./playwright.config.ts'
+  ];
 
   console.log(`即将执行第${index + 1}个命令:`, cmdArgs.join(' '));
 
@@ -171,6 +171,43 @@ app.post('/api/copy-folder', (req, res) => {
       copyOptions.options?.includeSubfolders ? '--include-subfolders' : '',
       copyOptions.options?.copyPermissions ? '--copy-permissions' : ''
     ].filter(Boolean).join(' ');
+    
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : '未知错误';
+    logToFile(`服务器错误: ${errMsg}`);
+    res.status(500).json({
+      success: false,
+      message: `服务器处理错误: ${errMsg}`
+    });
+  }
+});
+
+// 只创建课程的端点
+app.post('/api/create_course', (req, res) => {
+  try {
+    const createOptions = req.body.createOptions;
+    console.log(`data: ${JSON.stringify(createOptions)}`);
+
+    const subject= createOptions.subject;
+    const courseLessonCount = createOptions.courseLessonCount;
+    const courseDrive = createOptions.courseDrive;
+  
+    const scriptsToRun = ['create_course.spec.ts'];
+
+    const env = {
+        ...process.env,
+        subject: subject || '',
+        courseLessonCount: courseLessonCount || '',
+        courseDrive: courseDrive || ''
+    };
+    
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+
+    logToFile(`开始创建课程: 
+      学科: ${createOptions.subject},
+      课程库云盘: ${createOptions.courseDrive},
+      讲次数量: ${createOptions.courseLessonCount}
+    `);
     
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : '未知错误';

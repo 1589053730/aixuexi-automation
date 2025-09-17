@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>文件夹复制工具</title>
+  <title>教研创建课程工具</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   
@@ -47,6 +47,29 @@
         background-color: rgba(156, 163, 175, 0.5);
         border-radius: 2px;
       }
+      .status-running {
+        color: #165DFF;
+        font-weight: bold;
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+      }
+      .executing-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(22, 93, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #165DFF;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 6px;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
     }
   </style>
 </head>
@@ -55,13 +78,41 @@
     <header class="mb-8 text-center">
       <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-2 flex items-center justify-center">
         <i class="fa fa-cloud-transfer text-primary mr-3"></i>
-        课程绑定讲次
+        创建课程 or 绑定配件
       </h1>
       <p class="text-neutral">1、生产中心复制文件夹   2、课程库绑定课程库</p>
     </header>
 
     <main class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
       <form id="copyForm" class="space-y-8">
+
+        <div class="space-y-4">
+          <h2 class="text-xl font-semibold text-dark flex items-center">
+            <i class="fa fa-cogs text-primary mr-2"></i>
+            操作类型
+          </h2>
+          
+          <div class="space-y-4 border border-gray-100 rounded-lg p-4 bg-light/50">
+            <div class="flex items-start">
+              <input type="radio" id="onlyCreateCourse" name="operationType" value="onlyCreate" checked
+                class="mt-1 h-4 w-4 text-primary focus:ring-primary/50 border-gray-300">
+              <div class="ml-3">
+                <label for="onlyCreateCourse" class="block text-sm font-medium text-gray-700">只创建课程</label>
+                <p class="text-xs text-neutral mt-1">请“选择学科”，输入“绑定课程讲次数量”、“选择课程库云盘”</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start">
+              <input type="radio" id="createAndBind" name="operationType" value="createAndBind"
+                class="mt-1 h-4 w-4 text-primary focus:ring-primary/50 border-gray-300">
+              <div class="ml-3">
+                <label for="createAndBind" class="block text-sm font-medium text-gray-700">创建课程和绑定配件</label>
+                <p class="text-xs text-neutral mt-1">请“选择学科”，输入“复制参数设置”、“源文件夹设置”、“目标文件夹设置”</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="space-y-4">
           <h2 class="text-xl font-semibold text-dark flex items-center">
             <i class="fa fa-book text-primary mr-2"></i>
@@ -93,6 +144,42 @@
 
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <h2 class="text-xl font-semibold text-dark flex items-center">
+            <i class="fa fa-list-ol text-primary mr-2"></i>
+            课程讲次设置
+          </h2>
+          
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">请选择课程库云盘（对应 课程库-左侧课程）</label>
+              <div class="relative">
+                <select id="courseDrive" name="courseDrive" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
+                  <option value="">选择课程库位置</option>
+                  <option value="测试专用课程">测试专用课程</option>
+                  <option value="TSM课程">TSM课程</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                  <i class="fa fa-chevron-down text-xs"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">绑定课程讲次数量</label>
+              <div class="relative">
+                <input type="number" id="courseLessonCount" name="courseLessonCount" min="1" value="1" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
+                <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                  <i class="fa fa-hashtag text-xs"></i>
+                </div>
+              </div>
+              <p class="text-xs text-neutral">对应“课程库-新建课程”页面的“讲次”字段</p>
+            </div>
+            
+          </div>
+        </div>
+
+        <div class="space-y-4 pt-4 border-t border-gray-100">
+          <h2 class="text-xl font-semibold text-dark flex items-center">
             <i class="fa fa-sliders text-primary mr-2"></i>
             复制参数设置
           </h2>
@@ -108,31 +195,6 @@
                 </div>
               </div>
               <p class="text-xs text-neutral">输入需要复制的文件夹数量，至少为1</p>
-            </div>
-            
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">绑定课程讲次数量</label>
-              <div class="relative">
-                <input type="number" id="courseLessonCount" name="courseLessonCount" min="1" value="1" 
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none">
-                <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
-                  <i class="fa fa-hashtag text-xs"></i>
-                </div>
-              </div>
-              <p class="text-xs text-neutral">对应“课程库-新建课程”页面的“讲次”字段</p>
-            </div>
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700">请选择课程库云盘（对应 课程库-左侧课程）</label>
-            <div class="relative">
-              <select id="courseDrive" name="courseDrive" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all outline-none appearance-none">
-                <option value="">选择课程库位置</option>
-                <option value="测试专用课程">测试专用课程</option>
-                <option value="TSM课程">TSM课程</option>
-              </select>
-              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
-                <i class="fa fa-chevron-down text-xs"></i>
-              </div>
             </div>
           </div>
         </div>
@@ -208,7 +270,7 @@
         <div class="flex justify-center pt-4 border-t border-gray-100">
           <button type="submit" id="copyButton" class="bg-primary hover:bg-primary/90 text-white font-medium px-8 py-3 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center">
             <i class="fa fa-copy mr-2"></i>
-            执行讲次复制和绑定课程
+            提交
           </button>
         </div>
         <div id="status"></div>
@@ -257,6 +319,30 @@
     const copyCount = document.getElementById('copyCount');
     const courseLessonCount = document.getElementById('courseLessonCount');
     const courseDrive = document.getElementById('courseDrive');
+    const operationTypeRadios = document.querySelectorAll('input[name="operationType"]');
+
+    function toggleFormFields() {
+      const selectedType = document.querySelector('input[name="operationType"]:checked').value;
+      const isOnlyCreate = selectedType === 'onlyCreate';
+      
+      // 控制复制参数设置
+      document.querySelector('h2:has(.fa-sliders)').closest('.space-y-4').style.display = isOnlyCreate ? 'none' : 'block';
+      
+      // 始终显示课程讲次设置（移除之前的条件判断）
+      document.querySelector('h2:has(.fa-list-ol)').closest('.space-y-4').style.display = 'block';
+      
+      // 源文件夹设置和目标文件夹设置
+      document.querySelector('h2:has(.fa-folder-open)').closest('.space-y-4').style.display = isOnlyCreate ? 'none' : 'block';
+      document.querySelector('h2:has(.fa-folder-open-o)').closest('.space-y-4').style.display = isOnlyCreate ? 'none' : 'block';
+    }
+
+    // 为单选按钮添加事件监听
+    operationTypeRadios.forEach(radio => {
+      radio.addEventListener('change', toggleFormFields);
+    });
+
+    // 初始化时执行一次，设置初始显示状态
+    toggleFormFields();
     
     browseSource.addEventListener('click', () => {
       if (!sourceDrive.value) {
@@ -281,14 +367,18 @@
       if (!validateForm()) {
         return;
       }
-      
-      document.getElementById('status').textContent = '执行中...';
-      
+            
+      const statusElement = document.getElementById('status');
+      statusElement.innerHTML = '<span class="executing-indicator"></span><span class="status-running">执行中，请稍候...</span>';
+      statusElement.classList.add('p-3', 'bg-primary/5', 'rounded-lg', 'text-center');
+
       copyButton.disabled = true;
       copyButton.classList.add('opacity-70', 'cursor-not-allowed');
       cancelButton.classList.remove('hidden');
       
+      const selectedType = document.querySelector('input[name="operationType"]:checked').value;
       const formData = {
+        operationType: selectedType,
         subject: subject.value, 
         copyCount: parseInt(copyCount.value), 
         courseLessonCount: courseLessonCount.value,
@@ -310,12 +400,25 @@
         //设置5分钟超时
         const timeoutId = setTimeout(() => controller.abort(), 300000);
 
-        const response = await fetch('/api/copy-folder', {
+        const apiUrl = selectedType === 'onlyCreate' ? '/api/create_course' : '/api/copy-folder';
+        // 根据操作类型选择不同的参数名称
+        const requestBody = selectedType === 'onlyCreate' 
+          ? { createOptions: formData } 
+          : { copyOptions: formData };
+
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({copyOptions: formData }),
+            body: JSON.stringify(requestBody),
             signal: controller.signal
           });
+        
+        // const response = await fetch('/api/copy-folder', {
+        //     method: 'POST',
+        //     headers: {'Content-Type': 'application/json'},
+        //     body: JSON.stringify({copyOptions: formData }),
+        //     signal: controller.signal
+        //   });
 
         clearTimeout(timeoutId); 
 
@@ -324,9 +427,11 @@
         }
 
         const result = await response.json();
-        document.getElementById('status').textContent = result.success 
-          ? `执行完成: ${result.message}` 
-          : `失败: ${result.message}`;
+        const statusElement = document.getElementById('status');
+          statusElement.classList.remove('p-3', 'bg-primary/5', 'rounded-lg', 'text-center');
+          statusElement.innerHTML = result.success 
+            ? `<span class="text-success"><i class="fa fa-check-circle mr-1"></i> 执行完成: ${result.message}</span>` 
+            : `<span class="text-danger"><i class="fa fa-exclamation-circle mr-1"></i> 失败: ${result.message}</span>`;
       } catch (error) {
         document.getElementById('status').textContent = '错误: ' + error.message;
       } finally {
@@ -359,35 +464,56 @@
         copyCount.focus();
         return false;
       }
-      
-      if (!sourceDrive.value) {
-        showNotification('请选择源云盘', 'warning');
-        return false;
-      }
-      
-      if (!sourcePath.value.trim()) {
-        showNotification('请输入源文件夹路径', 'warning');
-        sourcePath.focus();
-        return false;
-      }
-      
-      if (!targetDrive.value) {
-        showNotification('请选择目标云盘', 'warning');
-        return false;
-      }
-      
-      if (!targetPath.value.trim()) {
-        showNotification('请输入目标文件夹路径', 'warning');
-        targetPath.focus();
-        return false;
-      }
-      
-      if (sourceDrive.value === targetDrive.value && sourcePath.value.trim() === targetPath.value.trim()) {
-        showNotification('源路径和目标路径不能相同', 'warning');
-        return false;
+
+      const selectedType = document.querySelector('input[name="operationType"]:checked').value;
+      if (selectedType !== 'onlyCreate') {
+        if (!copyCount.value || isNaN(copyCount.value) || parseInt(copyCount.value) < 1) {
+          showNotification('请输入有效的复制讲次数量（至少1）', 'warning');
+          copyCount.focus();
+          return false;
+        }
+
+        // 验证课程讲次数量必须大于复制文件夹数量且差值大于1
+        const lessonCount = parseInt(courseLessonCount.value);
+        const folderCount = parseInt(copyCount.value);
+
+        // 只需要保证讲次数量大于文件夹数量即可（允许等于文件夹数量+1）
+        if (lessonCount < folderCount + 1) {
+          showNotification(`“绑定课程讲次数量”（${lessonCount}）必须大于“生产中心复制文件夹数量”（${folderCount}）+1`, 'warning');
+          courseLessonCount.focus();
+          return false;
+        }
+        
+        if (!sourceDrive.value) {
+          showNotification('请选择源云盘', 'warning');
+          return false;
+        }
+        
+        if (!sourcePath.value.trim()) {
+          showNotification('请输入源文件夹路径', 'warning');
+          sourcePath.focus();
+          return false;
+        }
+        
+        if (!targetDrive.value) {
+          showNotification('请选择目标云盘', 'warning');
+          return false;
+        }
+        
+        if (!targetPath.value.trim()) {
+          showNotification('请输入目标文件夹路径', 'warning');
+          targetPath.focus();
+          return false;
+        }
+        
+        if (sourceDrive.value === targetDrive.value && sourcePath.value.trim() === targetPath.value.trim()) {
+          showNotification('源路径和目标路径不能相同', 'warning');
+          return false;
+        }
       }
       
       return true;
+      
     }
     
     function updateStatus(message, type) {

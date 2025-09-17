@@ -4,7 +4,7 @@ dns.setDefaultResultOrder('verbatim');
 // import { test, expect } from '@playwright/test';
 import { test, Page } from '@playwright/test';
 
-test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
+test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--生产完成-绑定课程配件', async ({ page }) => {
   test.setTimeout(600000);
 
 
@@ -329,13 +329,15 @@ test('选择文件夹--复制文件夹--生产完成', async ({ page }) => {
 
 // 切换菜单 + 判断绑定按钮 + 执行点击
 async function handleMenuItemBind(page: Page, menuItem: string, folderNameUpdate: string, index: number) {
-  const bindButton = page.getByRole('button', { name: '绑 定' }).first();
+  
 
   try {
     await page.getByRole('menuitem', { name: menuItem, exact: true }).click();
     await page.waitForTimeout(1000);
     console.log(`已切换到菜单项：【${menuItem}】`);
 
+    const bindButton = page.getByRole('button', { name: '绑 定' }).first();
+    await page.waitForTimeout(1000);
     const isButtonVisible = await bindButton.isVisible().catch(() => false);
 
     if (isButtonVisible) {
