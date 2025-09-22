@@ -377,6 +377,14 @@
       cancelButton.classList.remove('hidden');
       
       const selectedType = document.querySelector('input[name="operationType"]:checked').value;
+
+      const createCourseFormData = {
+        operationType: selectedType,
+        subject: subject.value, 
+        courseLessonCount: courseLessonCount.value,
+        courseDrive: courseDrive.value
+      };
+
       const formData = {
         operationType: selectedType,
         subject: subject.value, 
@@ -386,24 +394,19 @@
         sourceDrive: sourceDrive.value,
         sourcePath: sourcePath.value,
         targetDrive: targetDrive.value,
-        targetPath: targetPath.value,
-        options: {
-          overwrite: document.getElementById('overwrite')?.checked || false,
-          includeSubfolders: document.getElementById('includeSubfolders')?.checked || false,
-          copyPermissions: document.getElementById('copyPermissions')?.checked || false,
-          notifyOnComplete: document.getElementById('notifyOnComplete')?.checked || false
-        }
+        targetPath: targetPath.value
       };
+
       
       try {
         const controller = new AbortController();
-        //设置5分钟超时
-        const timeoutId = setTimeout(() => controller.abort(), 300000);
+        //设置10分钟超时
+        const timeoutId = setTimeout(() => controller.abort(), 600000);
 
         const apiUrl = selectedType === 'onlyCreate' ? '/api/create_course' : '/api/copy-folder';
         // 根据操作类型选择不同的参数名称
         const requestBody = selectedType === 'onlyCreate' 
-          ? { createOptions: formData } 
+          ? { createOptions: createCourseFormData } 
           : { copyOptions: formData };
 
         const response = await fetch(apiUrl, {

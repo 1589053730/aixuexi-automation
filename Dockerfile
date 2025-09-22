@@ -13,13 +13,13 @@ COPY playwright.config.ts ./
 COPY tests/ ./tests/
 COPY fixtures/ ./fixtures/
 
-# 假设你的 tsconfig.json 和其他必要的源文件也需要复制
+# 假设 tsconfig.json 和其他必要的源文件也需要复制
 COPY tsconfig.json ./
 
 # 安装项目依赖（包括 TypeScript）
 RUN npm install
 
-# 将你的 Node.js 代码编译成 JavaScript（如果需要）
+# 将 Node.js 代码编译成 JavaScript
 RUN npx tsc --build
 
 # 暴露应用程序运行的端口
@@ -27,9 +27,9 @@ EXPOSE 3001
 
 
 
-# 设置环境变量（如果需要）
+# 设置环境变量
 # ENV NODE_ENV=production
 
 # 启动命令，使用 node 运行编译后的 JavaScript 文件，或者直接使用 ts-node
-# 请根据你的实际启动文件路径修改
+# 根据实际启动文件路径修改
 CMD ["npx", "ts-node", "tools/server/copy_server.ts"]

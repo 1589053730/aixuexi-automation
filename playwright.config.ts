@@ -31,6 +31,10 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    // 截图策略（用例失败时自动截图）
+    screenshot: 'only-on-failure',
+    // 录屏策略（用例失败时自动录屏）
+    video: 'retain-on-failure',
   },
 
   /* Configure projects for major browsers */

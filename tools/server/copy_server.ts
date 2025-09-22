@@ -236,4 +236,4 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`服务器运行在 http://localhost:${PORT}`);
   logToFile(`服务器启动，监听端口 ${PORT}`);
 });
-server.setTimeout(300000); // 设置为 5 分钟
+server.setTimeout(600000); // 设置为 10 分钟
