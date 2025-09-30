@@ -32,4 +32,4 @@ EXPOSE 3001
 
 # 启动命令，使用 node 运行编译后的 JavaScript 文件，或者直接使用 ts-node
 # 根据实际启动文件路径修改
-CMD ["npx", "ts-node", "tools/server/copy_server.ts"]
+CMD ["npx", "ts-node", "tools/server/server.ts"]

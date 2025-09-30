@@ -7,18 +7,14 @@ import { test, Page } from '@playwright/test';
 test('课程库-创建课程（人教版-能力强化-暑假-2025）', async ({ page }) => {
   test.setTimeout(600000);
 
-  // const courseName = process.env.courseName;
-  // console.log(`课程名称: ${courseName}`);
-  // const presetCourseText = process.env.presetCourseText;
-  // console.log(`预设课程配置: ${presetCourseText}`);
-
   const timestamp = getTimestamp();
   const courseLessonCount = parseInt(process.env.courseLessonCount || '1', 10);
   const courseName = `ui自动化创建-${timestamp}`;
   const courseDrive = process.env.courseDrive;
   const subject = process.env.subject;
 
-  // const courseName = "ui自动化创建01";
+  // 调试
+  // const courseName = "ui自动化创建06";
   // const courseLessonCount = '2';
   // const courseDrive = "测试专用课程";
   // const subject = "初中数学";
@@ -57,52 +53,17 @@ test('课程库-创建课程（人教版-能力强化-暑假-2025）', async ({ 
   await page.getByRole('menuitem', { name: '教材版本 图标: right' }).click();
   await page.getByRole('menuitem', { name: '人教版' }).click();
 
-  await page.locator('#schemeId').getByText('请选择').click();
-  // cocator('div >div >div>div >ul.ant-select-dropdown-menu.ant-select-dropdown-menu-root.ant-select-dropdown-menu-vertical>li.ant-select-dropdown-menu-item ').nth(22);
-  // 点击第一个下拉选项
-  // await page.click('.ant-select-dropdown-menu-item:first-of-type');
-  await page.getByRole('option', { name: '能力强化' }).click();
-  await page.locator('#gradeId').getByText('请选择').click();
-  await page.getByRole('option', { name: '初一' }).click();
-  await page.locator('#period').getByText('请选择').click();
-  await page.getByRole('option', { name: '暑假' }).click();
+  const chose = "请选择..."
+  await selectDropdownFirstOption(page, '#schemeId',chose);
+  await selectDropdownFirstOption(page, '#gradeId',chose);
+  await selectDropdownFirstOption(page, '#period',chose);
+
   await page.locator('#years').getByText('请选择').click();
   await page.getByRole('option', { name: '2025' }).click();
   await page.getByRole('spinbutton', { name: '* 讲次' }).click();
   await page.getByRole('spinbutton', { name: '* 讲次' }).fill(courseLessonCount.toString());
   await page.getByRole('button', { name: '确 定' }).click();
 
-  // const fields = presetCourseText.split('/').map(field => field.trim());
-  // const textbookVersion = fields[0]; // 人教版
-  // const scheme = fields[1]; // 思维创新
-  // const grade = fields[2]; // 初一
-  // const period = fields[3]; // 暑假
-  // const year = fields[4]; // 2025
-  // const lessonCount = fields[5]; // 2讲
-  // const courseLevel = fields[6]; // 三阶课
-
-
-  // 1、创建课程
-  // await page.goto('http://ijiaoyan.aixuexi.com/workbench.html#/');
-  // await page.getByText('课程库').click();
-  // await page.getByText('测试专用课程').click();
-  // await page.getByRole('button', { name: '新建课程' }).click();
-  // await page.getByRole('textbox', { name: '* 名称' }).click();
-  // await page.getByRole('textbox', { name: '* 名称' }).fill(courseName);
-  // await page.locator('.ant-cascader-picker-label').click();
-  // await page.getByRole('menuitem', { name: '教材版本 图标: right' }).click();
-  // await page.getByRole('menuitem', { name: textbookVersion }).click();
-  // await page.locator('#schemeId').getByText('请选择').click();
-  // await page.getByRole('option', { name: scheme }).click();
-  // await page.locator('#gradeId').getByText('请选择').click();
-  // await page.getByRole('option', { name: grade }).click();
-  // await page.locator('#period').getByText('请选择').click();
-  // await page.getByRole('option', { name: period }).click();
-  // await page.locator('#years').getByText('请选择').click();
-  // await page.getByRole('option', { name: year }).click();
-  // await page.getByRole('spinbutton', { name: '* 讲次' }).click();
-  // await page.getByRole('spinbutton', { name: '* 讲次' }).fill(lessonCount);
-  // await page.getByRole('button', { name: '确 定' }).click();
 });
 
 function getTimestamp(): string {
@@ -114,4 +75,25 @@ function getTimestamp(): string {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
+}
+
+async function selectDropdownFirstOption(page: Page, selector: string,chose:string) {
+  // 点击下拉框触发展开
+  await page.locator(selector).getByText(`${chose}`).click();
+  
+  // 等待下拉框元素加载并获取aria-controls属性
+  const targetDiv = page.locator(`${selector} > div[aria-controls]`);
+  await targetDiv.waitFor({ state: 'visible' });
+  const ariaControlsValue = await targetDiv.getAttribute('aria-controls');
+  
+  if (!ariaControlsValue) {
+    throw new Error(`下拉框${selector}未找到aria-controls属性`);
+  }
+  
+  // 定位下拉选项并选择第一个
+  const dropdown = page.locator(`[id="${ariaControlsValue}"]`);
+  await dropdown.waitFor({ state: 'visible', timeout: 20000 });
+  const firstOption = dropdown.locator('ul > li').first();
+  await firstOption.waitFor({ state: 'visible', timeout: 10000 });
+  await firstOption.click();
 }

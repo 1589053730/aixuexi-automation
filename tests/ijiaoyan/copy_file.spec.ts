@@ -1,7 +1,5 @@
 import dns from 'dns';
 dns.setDefaultResultOrder('verbatim');
-
-// import { test, expect } from '@playwright/test';
 import { test, Page } from '@playwright/test';
 
 test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--生产完成-绑定课程配件', async ({ page }) => {
@@ -89,10 +87,10 @@ test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--�
   await page.getByRole('menuitem', { name: '教材版本 图标: right' }).click();
   await page.getByRole('menuitem', { name: '人教版' }).click();
 
-  await selectDropdownFirstOption(page, '#schemeId');
-  await selectDropdownFirstOption(page, '#gradeId');
-  await selectDropdownFirstOption(page, '#period');
-  await selectDropdownFirstOption(page, '#schemeId');
+  const chose = "请选择..."
+  await selectDropdownFirstOption(page, '#schemeId',chose);
+  await selectDropdownFirstOption(page, '#gradeId',chose);
+  await selectDropdownFirstOption(page, '#period',chose);
   await page.locator('#years').getByText('请选择').click();
   await page.getByRole('option', { name: '2025' }).click();
   await page.getByRole('spinbutton', { name: '* 讲次' }).click();
@@ -361,9 +359,9 @@ function getTimestamp(): string {
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }
 
-async function selectDropdownFirstOption(page: Page, selector: string) {
+async function selectDropdownFirstOption(page: Page, selector: string,chose:string) {
   // 点击下拉框触发展开
-  await page.locator(selector).getByText('请选择选项').click();
+  await page.locator(selector).getByText(`${chose}`).click();
   
   // 等待下拉框元素加载并获取aria-controls属性
   const targetDiv = page.locator(`${selector} > div[aria-controls]`);

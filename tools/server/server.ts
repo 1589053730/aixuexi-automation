@@ -32,23 +32,23 @@ app.options('/api/copy-folder', (req, res) => {
 
 
 const runTestScript = (scriptName, env, res, scripts, index) => {
-  const cmdArgs = [
-    'playwright', 'test', 
-    `tests/ijiaoyan/${scriptName}`,
-    '--headed', 
-    '--project=chromium',
-    '--config=./playwright.config.ts'
-    // ,
-    // '--debug'
-  ];
-
-  // linux
   // const cmdArgs = [
   //   'playwright', 'test', 
   //   `tests/ijiaoyan/${scriptName}`,
+  //   '--headed', 
   //   '--project=chromium',
   //   '--config=./playwright.config.ts'
+  //   // ,
+  //   // '--debug'
   // ];
+
+  // linux
+  const cmdArgs = [
+    'playwright', 'test', 
+    `tests/ijiaoyan/${scriptName}`,
+    '--project=chromium',
+    '--config=./playwright.config.ts'
+  ];
 
   console.log(`即将执行第${index + 1}个命令:`, cmdArgs.join(' '));
 
