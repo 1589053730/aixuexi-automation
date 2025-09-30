@@ -1,34 +1,69 @@
+import path from 'path';
+import fs from 'fs';
+
 import express from 'express';
 import { exec, spawn } from 'child_process';
-const app = express();
-app.use(express.json());
+import cors from 'cors';
 
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST');
+const app = express();
+const PORT = 3001;
+
+app.use(cors({
+  origin: [
+    'http://127.0.0.1:3001', 
+    'http://localhost:3001',
+    'http://127.0.0.1:3000'
+  ],
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+  optionsSuccessStatus: 200 
+}));
+
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.options('/api/copy-folder', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  next();
+  res.sendStatus(200); 
 });
+
 
 const runTestScript = (scriptName, env, res, scripts, index) => {
   const cmdArgs = [
     'playwright', 'test', 
     `tests/ijiaoyan/${scriptName}`,
     '--headed', 
-    '--project=chromium'
+    '--project=chromium',
+    '--config=./playwright.config.ts'
+    // ,
+    // '--debug'
   ];
+
+  // linux
+  // const cmdArgs = [
+  //   'playwright', 'test', 
+  //   `tests/ijiaoyan/${scriptName}`,
+  //   '--project=chromium',
+  //   '--config=./playwright.config.ts'
+  // ];
 
   console.log(`即将执行第${index + 1}个命令:`, cmdArgs.join(' '));
 
+  logToFile(`执行命令: ${cmdArgs.join(' ')}`);
+
   const child = spawn('npx', cmdArgs, { env });
 
-  child.stdout.on('data', (data) => {
-    console.log(`[Playwright 输出] ${data}`);
-  });
+  child.stdout?.on('data', (data) => {
+        const dataStr = data.toString();
+        logToFile(`脚本输出: ${dataStr}`);
+    });
 
-  child.stderr.on('data', (data) => {
-    console.error(`[Playwright 错误] ${data}`);
-  });
+  child.stderr?.on('data', (data) => {
+        console.error(`脚本错误: ${data}`);
+    });
 
   child.on('close', (code) => {
     if (code !== 0) {
@@ -44,59 +79,189 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
     if (index < scripts.length - 1) {
       runTestScript(scripts[index + 1], env, res, scripts, index + 1);
     } else {
-      // 所有脚本执行完成
-      res.json({ message: '所有脚本执行成功！' });
+      res.json({
+        success: true,
+        message: '所有脚本执行成功！'
+      });
     }
   });
 };
 
-app.post('/run-test', (req, res) => {
-  // const { resourceType, questionTypes, courseInfo } = req.body;
-  // let testScript = '';
-  const { resourceTypes, questionTypes, courseName, presetCourse,presetCourseText } = req.body;
-  const scriptsToRun = [];
-  console.log(`课程名称: ${courseName}`);
-  console.log("选中的资源类型是："+resourceTypes);
-  console.log("选中的预设课程设置："+presetCourseText);
-
-  if (resourceTypes.includes('course') && courseName) {
-    scriptsToRun.push('create_course.spec.ts');
+// 日志记录函数
+const logToFile = (message: string) => {
+  const logPath = path.join(__dirname, 'logs');
+  const logFile = path.join(logPath, 'copy_operations.log');
+  
+  // 确保日志目录存在
+  if (!fs.existsSync(logPath)) {
+    fs.mkdirSync(logPath, { recursive: true });
   }
+  
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+  
+  fs.appendFile(logFile, logMessage, (err) => {
+    if (err) console.error('日志写入失败:', err);
+  });
+  
+  console.log(logMessage.trim());
+};
 
-  if (resourceTypes.includes('exam')) {
-    scriptsToRun.push('create_exam_point_model_diagram.spec.ts');
+// 执行复制和绑定课程配将操
+app.post('/api/copy-folder', (req, res) => {
+  try {
+
+    const copyOptions = req.body.copyOptions;
+    console.log(`data: ${copyOptions}`);
+
+    const subject= copyOptions.subject;
+    const sourceDrive= copyOptions.sourceDrive;
+    const sourcePath= copyOptions.sourcePath;
+    const targetDrive= copyOptions.targetDrive;
+    const targetPath= copyOptions.targetPath;
+    const copyCount= copyOptions.copyCount;
+    const courseLessonCount = copyOptions.courseLessonCount;
+    const courseDrive = copyOptions.courseDrive;
+  
+    const scriptsToRun = [];
+    scriptsToRun.push('copy_file.spec.ts');
+
+    const env = {
+        ...process.env,
+        subject: subject || '',
+        sourceDrive: sourceDrive || '',
+        sourcePath: sourcePath || '',
+        targetDrive: targetDrive || '',
+        targetPath: targetPath || '',
+        copyCount: copyCount || '',
+        courseLessonCount: courseLessonCount || '',
+        courseDrive: courseDrive || ''
+    };
+
+    const originalCallback = (result) => {
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json(result);
+      }
+    };
+    
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+    // runTestScript(scriptsToRun[0], env, { ...res, end: originalCallback }, scriptsToRun, 0);
+
+    logToFile(`开始复制操作: 
+      学科: ${copyOptions.subject},
+      源: ${copyOptions.sourceDrive}${copyOptions.sourcePath},
+      目标: ${copyOptions.targetDrive}${copyOptions.targetPath}
+    `);
+    
+    const params = [
+      `--subject="${copyOptions.subject}"`,
+      `--source-drive="${copyOptions.sourceDrive}"`,
+      `--source-path="${copyOptions.sourcePath}"`,
+      `--target-drive="${copyOptions.targetDrive}"`,
+      `--target-path="${copyOptions.targetPath}"`,
+      copyOptions.options?.overwrite ? '--overwrite' : '',
+      copyOptions.options?.includeSubfolders ? '--include-subfolders' : '',
+      copyOptions.options?.copyPermissions ? '--copy-permissions' : ''
+    ].filter(Boolean).join(' ');
+    
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : '未知错误';
+    logToFile(`服务器错误: ${errMsg}`);
+    res.status(500).json({
+      success: false,
+      message: `服务器处理错误: ${errMsg}`
+    });
   }
-
-  if (resourceTypes.includes('handout')) {
-    scriptsToRun.push('create_handout_point_model_diagram.spec.ts');
-  }
-
-  const invalidTypes = resourceTypes.filter(type => !['course', 'exam'].includes(type));
-  if (invalidTypes.length > 0) {
-    return res.status(400).json({ message: `无效的资源类型：${invalidTypes.join(',')}` });
-  }
-
-  console.log(`要执行的文件数量: ${scriptsToRun.length}`);
-  if (scriptsToRun.length === 0) {
-    return res.status(400).json({ message: '没有需要执行的脚本' });
-  }
-
-  const processedQuestionTypes = Array.isArray(questionTypes)
-    ? JSON.stringify(questionTypes)
-    : questionTypes ? JSON.stringify([questionTypes]) : '[]';
-
-  const env = {
-    ...process.env,
-    questionTypes: processedQuestionTypes, 
-    courseName: courseName || '',
-    presetCourse: presetCourse || '',
-    presetCourseText: presetCourseText || ''
-  };
-
-  runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`服务已启动：http://localhost:${PORT}`);
+// 只创建课程
+app.post('/api/create_course', (req, res) => {
+  try {
+    const createOptions = req.body.createOptions;
+    console.log(`data: ${JSON.stringify(createOptions)}`);
+
+    const subject= createOptions.subject;
+    const courseLessonCount = createOptions.courseLessonCount;
+    const courseDrive = createOptions.courseDrive;
+  
+    const scriptsToRun = ['create_course.spec.ts'];
+
+    const env = {
+        ...process.env,
+        subject: subject || '',
+        courseLessonCount: courseLessonCount || '',
+        courseDrive: courseDrive || ''
+    };
+    
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+
+    logToFile(`开始创建课程: 
+      学科: ${createOptions.subject},
+      课程库云盘: ${createOptions.courseDrive},
+      讲次数量: ${createOptions.courseLessonCount}
+    `);
+    
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : '未知错误';
+    logToFile(`服务器错误: ${errMsg}`);
+    res.status(500).json({
+      success: false,
+      message: `服务器处理错误: ${errMsg}`
+    });
+  }
 });
+
+//创建试卷并添加对应题型
+app.post('/api/create_exam', (req, res) => {
+  try {
+
+    const createOptions = req.body.createOptions;
+    const subject= createOptions.subject;
+    const questionTypes = createOptions.questionTypes;
+    const questionCount = createOptions.questionCount;
+
+    console.log(`subject:`,subject);
+    console.log(`questionTypes: ${JSON.stringify(questionTypes)}`);
+
+    const processedQuestionTypes = Array.isArray(questionTypes)
+      ? JSON.stringify(questionTypes)
+      : questionTypes ? JSON.stringify([questionTypes]) : '[]';
+
+    const scriptsToRun = ['create_exam_point_model_diagram.spec.ts'];
+
+    const env = {
+      ...process.env,
+      subject: subject,
+      questionTypes: processedQuestionTypes,
+      questionCount: questionCount
+    };
+    
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+
+    // 记录日志
+    logToFile(`开始创建试卷: 
+      题型: ${JSON.stringify(questionTypes)}
+    `);
+    
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : '未知错误';
+    logToFile(`服务器错误: ${errMsg}`);
+    res.status(500).json({
+      success: false,
+      message: `服务器处理错误: ${errMsg}`
+    });
+  }
+});
+
+// 提供前端静态文件
+app.use('/tools/ui', express.static('tools/ui'));
+// app.use('/tools/ui', express.static(path.join(__dirname, '../ui')));
+
+// 启动服务器
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`服务器运行在 http://localhost:${PORT}`);
+  logToFile(`服务器启动，监听端口 ${PORT}`);
+});
+server.setTimeout(600000); // 设置为 10 分钟
