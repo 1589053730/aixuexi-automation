@@ -95,6 +95,7 @@ test('创建试卷-添加题目（知识图谱试题-按点模图谱）-保存�
     .filter(type => Object.keys(questionTypeMap).includes(type))
     .map(type => questionTypeMap[type as keyof typeof questionTypeMap]);
 
+  console.log('准备添加试题');  
   // 如果有需要勾选的类型，则依次点击勾选
   if (typesToSelect.length > 0) {
     
@@ -112,20 +113,25 @@ test('创建试卷-添加题目（知识图谱试题-按点模图谱）-保存�
       await filterGroup.getByText(typeText, { exact: true }).click();
       await page1.waitForTimeout(5000);
 
+      console.log('开始循环添加指定数量题目');  
       // 3. 循环添加指定数量的题目
       for (let i = 1; i <= questionCount; i++) {
+        await page.screenshot({ path: 'screenshots/准备添加试题.png' });
         console.log(`添加第${i}道${typeText}`);
         await page1.locator('iframe').contentFrame().getByRole('tabpanel').locator('iframe').contentFrame().locator(`div:nth-child(${i}) > .action-toolbar > .bottom-right > .user-tool > .add-btn`).click();
         //此处点击第一道题目等待5s，是因为页面有bug，连续快速点击两次"添加题目"页面会出现白屏，导致后面操作元素无法找到，刷新页面可跳过这个bug
         await page1.waitForTimeout(5000);
       }
 
+      await page.screenshot({ path: 'screenshots/关闭资源库.png' });
+      console.log('关闭资源库'); 
       // 关闭资源库
       await page1.locator('iframe').contentFrame().locator('#root div').filter({ hasText: /^资源库$/ }).locator('use').click();
       await page1.waitForTimeout(5000);
     }
   }
 
+  console.log('开始设置分值'); 
   // 4. 分值设置、保存发布
   await page1.frameLocator('iframe').first().locator('xpath=//*[@id="root"]/div/div[2]/div[2]/div/div[2]/div[2]/div/div/i').click();
   await page1.locator('iframe').contentFrame().getByRole('button', { name: '自动分配分数' }).click();

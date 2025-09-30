@@ -19,13 +19,13 @@ test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--�
   const courseDrive = process.env.courseDrive;
 
   // 调试用
-  // const sourcePath="/san测试/章节结构/4-6"
-  // const subject = "初中数学";
+  // const sourcePath="/san测试/第十四讲"
+  // const subject = "初中化学";
   // const sourceDrive = "测试专用公共云盘";
   // const targetDrive = "测试专用公共云盘";
-  // const targetPath = "/san测试/章节结构";
+  // const targetPath = "/zhangq测试";
   // const copyCount = 1;
-  // const courseName = "ui自动化创建05";
+  // const courseName = "ui自动化创建09";
   // const courseLessonCount = '2';
   // const courseDrive = "测试专用课程";
   
@@ -227,16 +227,16 @@ test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--�
 
     //8、修改复制后的文件夹名字
     const targetRowOne = page.locator('tbody tr').first();
-    const folderNameText = targetRowOne.locator('td:nth-child(3) >div>div>div>span').first().textContent();
-    const prefix = (await folderNameText).includes('-') 
-      ? (await folderNameText).split('-')[0] 
+    const folderNameText = await targetRowOne.locator('td:nth-child(3) >div>div>div>span').first().textContent();
+    const prefix = folderNameText?.includes('-') 
+      ? folderNameText.split('-')[0] 
       : folderNameText; 
     const folderNameUpdate = `${prefix}-${timestamp}`;
 
     const updateSvg = targetRowOne.locator('td:nth-child(4) >> .list-operation >> span:nth-child(1) >> i >> svg');
     await targetRowOne.hover();
     await updateSvg.click();
-    await page.getByRole('textbox', { name: '*' }).fill(folderNameUpdate);
+    await page.getByRole('textbox', { name: '*' }).fill(folderNameUpdate || '');
     await page.getByRole('button', { name: '确 定' }).click();
 
     // 进入复制后的文件夹
