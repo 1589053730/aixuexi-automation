@@ -6,8 +6,6 @@ import { test, Page } from '@playwright/test';
 
 test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--生产完成-绑定课程配件', async ({ page }) => {
   test.setTimeout(600000);
-
-
   const timestamp = getTimestamp();
   
   // test.setTimeout(300000 * parseInt(process.env.copyCount || '1', 10)); // 按复制次数调整超时时间
@@ -21,13 +19,8 @@ test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--�
   const courseName = `ui自动化创建-${timestamp}`;
   const courseLessonCount = parseInt(process.env.courseLessonCount || '1', 10);
   const courseDrive = process.env.courseDrive;
-  
 
-  // 校验 copyCount 合法性
-  // if (isNaN(copyCount) || copyCount < 1) {
-  //   throw new Error(`无效的复制次数 copyCount: ${process.env.copyCount}，必须是大于等于1的整数`);
-  // }
-
+  // 调试用
   // const sourcePath="/san测试/章节结构/4-6"
   // const subject = "初中数学";
   // const sourceDrive = "测试专用公共云盘";
@@ -95,12 +88,11 @@ test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--�
   await page.locator('.ant-cascader-picker-label').click();
   await page.getByRole('menuitem', { name: '教材版本 图标: right' }).click();
   await page.getByRole('menuitem', { name: '人教版' }).click();
-  await page.locator('#schemeId').getByText('请选择').click();
-  await page.getByRole('option', { name: '能力强化' }).click();
-  await page.locator('#gradeId').getByText('请选择').click();
-  await page.getByRole('option', { name: '初一' }).click();
-  await page.locator('#period').getByText('请选择').click();
-  await page.getByRole('option', { name: '暑假' }).click();
+
+  await selectDropdownFirstOption(page, '#schemeId');
+  await selectDropdownFirstOption(page, '#gradeId');
+  await selectDropdownFirstOption(page, '#period');
+  await selectDropdownFirstOption(page, '#schemeId');
   await page.locator('#years').getByText('请选择').click();
   await page.getByRole('option', { name: '2025' }).click();
   await page.getByRole('spinbutton', { name: '* 讲次' }).click();
@@ -235,7 +227,7 @@ test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--�
       await page.waitForTimeout(2000);
     }
 
-    //修改复制后的文件夹名字
+    //8、修改复制后的文件夹名字
     const targetRowOne = page.locator('tbody tr').first();
     const folderNameText = targetRowOne.locator('td:nth-child(3) >div>div>div>span').first().textContent();
     const prefix = (await folderNameText).includes('-') 
@@ -253,7 +245,7 @@ test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--�
     await targetRowOne.locator('td:nth-child(3)').click();
     await page.waitForTimeout(3000);
 
-    // 批量处理生产完成
+    // 9、批量处理生产完成
     const fileList = page.locator('tbody.ant-table-tbody tr.ant-table-row');
     const count = await fileList.count();
     console.log(`第 ${copyIndex + 1} 次复制的文件夹包含 ${count} 个文件`);
@@ -273,7 +265,7 @@ test('创建课程-绑定基础数据配件-选择文件夹--复制文件夹--�
     await page.waitForTimeout(2000); 
 
     
-    // 8. 绑定课程配件
+    // 10. 绑定课程配件
     await page.getByText('课程库', { exact: true }).click();
     await page.locator('div.ant-layout-sider-children > ul > li > div').getByText(courseDrive).click();
     await page.getByText(courseName).click();
@@ -367,4 +359,25 @@ function getTimestamp(): string {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
+}
+
+async function selectDropdownFirstOption(page: Page, selector: string) {
+  // 点击下拉框触发展开
+  await page.locator(selector).getByText('请选择选项').click();
+  
+  // 等待下拉框元素加载并获取aria-controls属性
+  const targetDiv = page.locator(`${selector} > div[aria-controls]`);
+  await targetDiv.waitFor({ state: 'visible' });
+  const ariaControlsValue = await targetDiv.getAttribute('aria-controls');
+  
+  if (!ariaControlsValue) {
+    throw new Error(`下拉框${selector}未找到aria-controls属性`);
+  }
+  
+  // 定位下拉选项并选择第一个
+  const dropdown = page.locator(`[id="${ariaControlsValue}"]`);
+  await dropdown.waitFor({ state: 'visible', timeout: 20000 });
+  const firstOption = dropdown.locator('ul > li').first();
+  await firstOption.waitFor({ state: 'visible', timeout: 10000 });
+  await firstOption.click();
 }

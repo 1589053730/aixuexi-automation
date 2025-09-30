@@ -9,7 +9,6 @@ import cors from 'cors';
 const app = express();
 const PORT = 3001;
 
-
 app.use(cors({
   origin: [
     'http://127.0.0.1:3001', 
@@ -36,23 +35,23 @@ app.options('/api/copy-folder', (req, res) => {
 
 
 const runTestScript = (scriptName, env, res, scripts, index) => {
-  // const cmdArgs = [
-  //   'playwright', 'test', 
-  //   `tests/ijiaoyan/${scriptName}`,
-  //   '--headed', 
-  //   '--project=chromium',
-  //   '--config=./playwright.config.ts'
-  //   // ,
-  //   // '--debug'
-  // ];
-
-  // linux
   const cmdArgs = [
     'playwright', 'test', 
     `tests/ijiaoyan/${scriptName}`,
+    '--headed', 
     '--project=chromium',
     '--config=./playwright.config.ts'
+    // ,
+    // '--debug'
   ];
+
+  // linux
+  // const cmdArgs = [
+  //   'playwright', 'test', 
+  //   `tests/ijiaoyan/${scriptName}`,
+  //   '--project=chromium',
+  //   '--config=./playwright.config.ts'
+  // ];
 
   console.log(`即将执行第${index + 1}个命令:`, cmdArgs.join(' '));
 
@@ -207,6 +206,56 @@ app.post('/api/create_course', (req, res) => {
       学科: ${createOptions.subject},
       课程库云盘: ${createOptions.courseDrive},
       讲次数量: ${createOptions.courseLessonCount}
+    `);
+    
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : '未知错误';
+    logToFile(`服务器错误: ${errMsg}`);
+    res.status(500).json({
+      success: false,
+      message: `服务器处理错误: ${errMsg}`
+    });
+  }
+});
+
+//创建试卷添加对应题型
+app.post('/api/create_exam', (req, res) => {
+  try {
+
+    const createOptions = req.body.createOptions;
+    const subject= createOptions.subject;
+    const questionTypes = createOptions.questionTypes;
+    const questionCount = createOptions.questionCount;
+
+    // const { resourceTypes, questionTypes } = req.body;
+    console.log(`subject:`,subject);
+    console.log(`questionTypes: ${JSON.stringify(questionTypes)}`);
+
+    const processedQuestionTypes = Array.isArray(questionTypes)
+      ? JSON.stringify(questionTypes)
+      : questionTypes ? JSON.stringify([questionTypes]) : '[]';
+
+    // 处理资源类型数据
+    // const processedResourceTypes = Array.isArray(resourceTypes)
+    //   ? JSON.stringify(resourceTypes)
+    //   : resourceTypes ? JSON.stringify([resourceTypes]) : '[]';
+
+  
+    const scriptsToRun = ['create_exam_point_model_diagram.spec.ts'];
+
+    // 准备环境变量，传递给脚本
+    const env = {
+      ...process.env,
+      subject: subject,
+      questionTypes: processedQuestionTypes,
+      questionCount: questionCount
+    };
+    
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+
+    // 记录日志
+    logToFile(`开始创建试卷: 
+      题型: ${JSON.stringify(questionTypes)}
     `);
     
   } catch (error) {
