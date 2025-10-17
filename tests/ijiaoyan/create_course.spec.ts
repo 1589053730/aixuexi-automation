@@ -41,17 +41,32 @@ test('课程库-创建课程（人教版-能力强化-暑假-2025）', async ({ 
   await page.getByRole('combobox').locator('span').nth(1).click();
   await page.screenshot({ path: 'screenshots/debug2.png' });
   await page.getByRole('option', { name: subject }).click();
-  console.log('切换学科完成');
-  await page.waitForLoadState('networkidle');
+  console.log('切换学科完成，开始等待网络空闲状态');
+  try {
+    // await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('networkidle', { timeout: 30000 });
+    console.log('网络已进入空闲状态，准备点击课程库');
+    console.log('尝试点击课程库');
 
-  await page.getByText('课程库').click();
-  await page.getByText(courseDrive).click();
+    await page.getByText('课程库').click();
+    console.log('课程库点击成功');
+    console.log(`尝试点击课程库位置: ${courseDrive}`);
+    await page.getByText(courseDrive).click();
+  } catch (error) {
+    // 捕获错误时生成截图并详细输出错误信息
+    const errorTime = new Date().toISOString().replace(/:/g, '-');
+    await page.screenshot({ path: `screenshots/error-${errorTime}.png` });
+    console.error(`操作失败: ${(error as Error).message}`);
+    console.error(`错误发生位置: 切换学科后`);
+    console.error(`当前页面URL: ${page.url()}`);
+    throw error; 
+  }
   await page.getByRole('button', { name: '新建课程' }).click();
   await page.getByRole('textbox', { name: '* 名称' }).click();
   await page.getByRole('textbox', { name: '* 名称' }).fill(courseName);
   await page.locator('.ant-cascader-picker-label').click();
   await page.getByRole('menuitem', { name: '教材版本 图标: right' }).click();
-  await page.getByRole('menuitem', { name: '人教版' }).click();
+  await page.getByRole('menuitem', { name: '人教版' , exact: true}).click();
 
   const chose = "请选择..."
   await selectDropdownFirstOption(page, '#schemeId',chose);

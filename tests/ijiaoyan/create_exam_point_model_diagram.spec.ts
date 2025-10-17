@@ -67,7 +67,7 @@ test('创建试卷-添加题目（知识图谱试题-按点模图谱）-保存�
   await page.getByRole('textbox', { name: '* 名称:' }).fill(examName);
   await page.locator('.ant-cascader-picker-label').click();
   await page.getByRole('menuitem', { name: '教材版本 图标: right' }).click();
-  await page.getByRole('menuitem', { name: '人教版' }).click();
+  await page.getByRole('menuitem', { name: '人教版'  , exact: true}).click();
   
   await selectDropdownFirstOption(page, '#GRADE');
   await selectDropdownFirstOption(page, '#TERM');
