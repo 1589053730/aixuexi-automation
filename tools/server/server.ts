@@ -2,11 +2,18 @@ import path from 'path';
 import fs from 'fs';
 
 import express from 'express';
-import { exec, spawn } from 'child_process';
+import { exec, spawn, execSync } from 'child_process';
 import cors from 'cors';
+import { rimrafSync } from 'rimraf';
 
 const app = express();
 const PORT = 3001;
+const REPORT_DIR = path.join(__dirname, 'allure-report'); 
+const API_TITLE_MAP = {
+  'create_exam': '创建试卷',
+  'create_course': '创建课程',
+  'copy-folder': '创建课程并绑定配件'
+};
 
 app.use(cors({
   origin: [
@@ -31,7 +38,9 @@ app.options('/api/copy-folder', (req, res) => {
 });
 
 
-const runTestScript = (scriptName, env, res, scripts, index) => {
+const runTestScript = (scriptName, env, res, scripts, index, apiName) => {
+  // const { rimrafSync } = require('rimraf');
+  rimrafSync('allure-results'); // 清理之前的测试结果
   // const cmdArgs = [
   //   'playwright', 'test', 
   //   `tests/ijiaoyan/${scriptName}`,
@@ -75,17 +84,129 @@ const runTestScript = (scriptName, env, res, scripts, index) => {
       return;
     }
 
-  // 如果还有下一个脚本，继续执行
-    if (index < scripts.length - 1) {
-      runTestScript(scripts[index + 1], env, res, scripts, index + 1);
-    } else {
+    // 测试成功后生成报告
+    if (index === scripts.length - 1) {
+      const reportId = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 14);
+      const reportPath = path.join(REPORT_DIR, reportId);
+      
+      execSync(`allure generate allure-results --clean -o ${reportPath}`, { stdio: 'inherit' });
+      recordReportMetadata(reportId, apiName);
+      
       res.json({
         success: true,
-        message: '所有脚本执行成功！'
+        message: '脚本执行成功，报告已生成！'
       });
+    } else {
+      // 如果还有下一个脚本，继续执行
+        if (index < scripts.length - 1) {
+          runTestScript(scripts[index + 1], env, res, scripts, index + 1, apiName);
+        } else {
+          res.json({
+            success: true,
+            message: '所有脚本执行成功！'
+          });
+        }
     }
   });
 };
+
+// 记录报告元数据
+function recordReportMetadata(reportId, apiName) {
+  const metadataPath = path.join(REPORT_DIR, 'report-metadata.json');
+  const metadata = fs.existsSync(metadataPath) 
+    ? JSON.parse(fs.readFileSync(metadataPath, 'utf8'))
+    : [];
+  
+  // 从allure结果中提取统计信息
+  const stats = getReportStats();
+
+  // 根据apiName获取标题，默认使用"未知用例"
+  const title = API_TITLE_MAP[apiName] || '未知用例';
+  
+  metadata.push({
+    id: reportId,
+    datetime: new Date().toLocaleString(),
+    title: title,
+    ...stats
+  });
+  
+  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+}
+
+// 获取报告统计信息
+function getReportStats() {
+  try {
+    // 指向根目录下的allure-results
+    const resultsDir = path.join(process.cwd(), 'allure-results');
+    
+    // 检查结果目录是否存在
+    if (!fs.existsSync(resultsDir)) {
+      console.warn('未找到allure-results目录，使用默认统计数据');
+      return { total: 0, passed: 0, failed: 0, status: 'unknown' };
+    }
+
+    // 获取所有result.json文件
+    const resultFiles = fs.readdirSync(resultsDir)
+      .filter(file => file.endsWith('-result.json'));
+
+    if (resultFiles.length === 0) {
+      console.warn('allure-results目录下未找到测试结果文件，使用默认统计数据');
+      return { total: 0, passed: 0, failed: 0, status: 'unknown' };
+    }
+
+    // 初始化统计数据
+    let total = 0;
+    let passed = 0;
+    let failed = 0;
+    let broken = 0;
+    let skipped = 0;
+
+    // 遍历所有结果文件计算统计
+    resultFiles.forEach(file => {
+      const filePath = path.join(resultsDir, file);
+      const content = fs.readFileSync(filePath, 'utf8');
+      const result = JSON.parse(content);
+
+      total++;
+      
+      switch (result.status) {
+        case 'passed':
+          passed++;
+          break;
+        case 'failed':
+          failed++;
+          break;
+        case 'broken':
+          broken++;
+          break;
+        case 'skipped':
+          skipped++;
+          break;
+        default:
+          console.log(`未知状态: ${result.status} (文件: ${file})`);
+      }
+    });
+
+    // 计算整体状态
+    let status = 'success';
+    if (failed > 0 || broken > 0) {
+      status = 'failed';
+    } else if (skipped > 0) {
+      status = 'skipped';
+    }
+
+    return {
+      total,
+      passed,
+      failed: failed + broken, // 合并失败和错误的用例数
+      skipped,
+      status
+    };
+  } catch (error) {
+    console.error('解析测试统计信息失败:', error);
+    return { total: 0, passed: 0, failed: 0, status: 'error' };
+  }
+}
 
 // 日志记录函数
 const logToFile = (message: string) => {
@@ -146,7 +267,7 @@ app.post('/api/copy-folder', (req, res) => {
       }
     };
     
-    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0, 'copy-folder');
     // runTestScript(scriptsToRun[0], env, { ...res, end: originalCallback }, scriptsToRun, 0);
 
     logToFile(`开始复制操作: 
@@ -195,7 +316,7 @@ app.post('/api/create_course', (req, res) => {
         courseDrive: courseDrive || ''
     };
     
-    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0, 'create_course');
 
     logToFile(`开始创建课程: 
       学科: ${createOptions.subject},
@@ -238,7 +359,7 @@ app.post('/api/create_exam', (req, res) => {
       questionCount: questionCount
     };
     
-    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0);
+    runTestScript(scriptsToRun[0], env, res, scriptsToRun, 0, 'create_exam');
 
     // 记录日志
     logToFile(`开始创建试卷: 
@@ -255,9 +376,22 @@ app.post('/api/create_exam', (req, res) => {
   }
 });
 
+//获取报告列表
+app.get('/api/reports', (req, res) => {
+  const metadataPath = path.join(REPORT_DIR, 'report-metadata.json');
+  if (fs.existsSync(metadataPath)) {
+    const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+    res.json(metadata);
+  } else {
+    res.json([]);
+  }
+});
+
 // 提供前端静态文件
 app.use('/tools/ui', express.static('tools/ui'));
 // app.use('/tools/ui', express.static(path.join(__dirname, '../ui')));
+app.use('/allure-report', express.static(path.join(__dirname, 'allure-report')));
+
 
 // 启动服务器
 const server = app.listen(PORT, '0.0.0.0', () => {

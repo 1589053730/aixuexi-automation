@@ -3,8 +3,15 @@ import dns from 'dns';
 dns.setDefaultResultOrder('verbatim');
 // import { test, expect } from '@playwright/test';
 import { test, Page } from '@playwright/test';
+import { allure } from 'allure-playwright';
+
 
 test('课程库-创建课程（人教版-能力强化-暑假-2025）', async ({ page }) => {
+  
+  await allure.epic('课程管理');
+  await allure.feature('创建课程');
+  await allure.story('用户创建新课程');
+  
   test.setTimeout(600000);
 
   const timestamp = getTimestamp();
@@ -49,13 +56,16 @@ test('课程库-创建课程（人教版-能力强化-暑假-2025）', async ({ 
     console.log('尝试点击课程库');
 
     await page.getByText('课程库').click();
+
     console.log('课程库点击成功');
     console.log(`尝试点击课程库位置: ${courseDrive}`);
+
     await page.getByText(courseDrive).click();
   } catch (error) {
     // 捕获错误时生成截图并详细输出错误信息
     const errorTime = new Date().toISOString().replace(/:/g, '-');
     await page.screenshot({ path: `screenshots/error-${errorTime}.png` });
+
     console.error(`操作失败: ${(error as Error).message}`);
     console.error(`错误发生位置: 切换学科后`);
     console.error(`当前页面URL: ${page.url()}`);

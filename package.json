@@ -9,7 +9,9 @@
     "dev": "ts-node index.ts",
     "playwright:install": "playwright install",
     "playwright:test": "playwright test",
-    "playwright:show-report": "playwright show-report"
+    "playwright:show-report": "playwright show-report",
+    "test:single": "playwright test tests/ijiaoyan/",
+    "test:report": "playwright test && allure generate allure-results --clean -o allure-report/$(date +%Y%m%d%H%M) && allure open"
   },
   "keywords": [],
   "author": "",
@@ -18,12 +20,15 @@
     "@playwright/test": "^1.55.0",
     "@types/express": "^5.0.3",
     "@types/node": "^24.3.0",
+    "allure-commandline": "^2.34.1",
+    "allure-playwright": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "rimraf": "^6.0.1",
     "uuid": "^11.1.0"
   }
 }

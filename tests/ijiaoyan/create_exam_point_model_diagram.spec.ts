@@ -1,6 +1,8 @@
 import dns from 'dns';
 dns.setDefaultResultOrder('verbatim');
 import { test, Page , expect} from '@playwright/test';
+import { allure } from 'allure-playwright';
+
 
 test('创建试卷-添加题目（知识图谱试题-按点模图谱）-保存发布-生产完成', async ({page }) => {
 

@@ -4,6 +4,27 @@ FROM mcr.microsoft.com/playwright:v1.55.0
 # 设置工作目录
 WORKDIR /app
 
+# 安装 Java 和 Allure 依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-17-jre \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# 配置 Java 环境变量
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# 安装 Allure 命令行工具
+RUN curl -o allure-2.25.0.zip -L https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip \
+    && unzip allure-2.25.0.zip -d /opt/ \
+    && ln -s /opt/allure-2.25.0/bin/allure /usr/bin/allure \
+    && rm allure-2.25.0.zip
+
+# 验证安装
+RUN java -version && allure --version
+
+
 # 将项目文件复制到容器中
 COPY package.json package-lock.json* ./
 # COPY tools/ ./tools/
@@ -12,8 +33,6 @@ COPY tools/ ./tools/
 COPY playwright.config.ts ./
 COPY tests/ ./tests/
 COPY fixtures/ ./fixtures/
-
-# 假设 tsconfig.json 和其他必要的源文件也需要复制
 COPY tsconfig.json ./
 
 # 安装项目依赖（包括 TypeScript）
@@ -31,5 +50,4 @@ EXPOSE 3001
 # ENV NODE_ENV=production
 
 # 启动命令，使用 node 运行编译后的 JavaScript 文件，或者直接使用 ts-node
-# 根据实际启动文件路径修改
 CMD ["npx", "ts-node", "tools/server/server.ts"]

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试报告详情</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 p-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">测试报告详情</h2>
+      <button onclick="window.history.back()" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-100">
+        <i class="fa fa-arrow-left mr-1"></i> 返回列表
+      </button>
+    </div>
+
+    <!-- 报告详情iframe -->
+    <div class="bg-white rounded-lg shadow overflow-hidden min-h-[80vh]">
+      <iframe id="allureReportFrame" src="" frameborder="0" class="w-full h-full min-h-[80vh]"></iframe>
+    </div>
+  </div>
+
+  <script>
+    // 获取URL参数中的报告ID
+    function getReportId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    // 加载对应的Allure报告
+    document.addEventListener('DOMContentLoaded', () => {
+      const reportId = getReportId();
+      if (reportId) {
+        // 实际项目中应根据ID加载对应的报告
+        // Allure报告通常需要通过服务启动，这里使用相对路径示例
+        document.getElementById('allureReportFrame').src = `/allure-report/${reportId}/index.html`;
+      }
+    });
+  </script>
+</body>
+</html>
